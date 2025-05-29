@@ -1,0 +1,31 @@
+# Build artifacts
+android/app/build/
+android/build/
+android/.gradle/
+android/.kotlin/
+.expo/
+node_modules/
+
+# Documentation and README files
+*.md
+GRADLE_BUILD_TROUBLESHOOTING.md
+NETWORK_PERFORMANCE_IMPROVEMENTS.md
+IMAGE_OPTIMIZATION_README.md
+HOMESCREEN_IMPROVEMENTS.md
+FADE_TRANSITION_IMPLEMENTATION.md
+ERROR_FIXES.md
+DATE_PICKER_IMPLEMENTATION.md
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Temporary files
+.DS_Store
+thumbs.db
+*.tmp
+*.temp
+
+# Cache directories
+android/app/.cxx/ 
