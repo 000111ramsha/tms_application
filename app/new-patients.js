@@ -302,7 +302,7 @@ export default function NewPatientsScreen() {
               <Ionicons 
                 name="arrow-forward" 
                 size={18} 
-                color={isExpectPressed ? Colors.white : Colors.primary} 
+                color={isExpectPressed ? Colors.white : Colors.white} 
                 style={styles.expectButtonIcon} 
               />
             </TouchableOpacity>
@@ -339,7 +339,7 @@ export default function NewPatientsScreen() {
               <Ionicons 
                 name="arrow-forward" 
                 size={18} 
-                color={isAssessmentPressed ? Colors.white : Colors.primary} 
+                color={isAssessmentPressed ? Colors.white : Colors.white} 
                 style={styles.assessmentButtonIcon} 
               />
             </TouchableOpacity>
@@ -370,7 +370,7 @@ export default function NewPatientsScreen() {
               <Ionicons 
                 name="arrow-forward" 
                 size={18} 
-                color={isAppointmentPressed ? Colors.white : Colors.primary} 
+                color={isAppointmentPressed ? Colors.white : Colors.white} 
                 style={styles.appointmentButtonIcon} 
               />
             </TouchableOpacity>
