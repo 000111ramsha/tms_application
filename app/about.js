@@ -91,6 +91,7 @@ export default function AboutScreen() {
                 resizeMode="cover"
                 lazy={true}
                 priority={false}
+                accessibilityLabel="TMS therapy introduction video thumbnail"
               />
               <View style={styles.playButton}>
                 <Ionicons name="play" size={36} color={Colors.white} />
@@ -160,9 +161,10 @@ export default function AboutScreen() {
                     lazy={true}
                     priority={false}
                   />
-                  <Text style={styles.teamName}>{member.name}</Text>
-                  <Text style={styles.teamRole}>{member.role}</Text>
-                  <View style={styles.teamCardAccent} />
+                  <View style={styles.teamTextContainer}>
+                    <Text style={styles.teamName}>{member.name}</Text>
+                    <Text style={styles.teamRole}>{member.role}</Text>
+                  </View>
                 </View>
               ))}
             </View>
@@ -248,10 +250,11 @@ const styles = StyleSheet.create({
   },
   aboutSection: {
     backgroundColor: Colors.white,
-    marginHorizontal: Layout.spacing.large,
-    marginTop: Layout.spacing.large,
-    borderRadius: Layout.borderRadius.large,
-    padding: Layout.spacing.xlarge,
+    marginHorizontal: 0,
+    marginTop: 50,
+    marginBottom: 50,
+    borderRadius: 0,
+    padding: 24,
     elevation: 2,
     shadowColor: Colors.black,
     shadowOpacity: 0.08,
@@ -283,12 +286,14 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weights.bold,
     color: Colors.primary,
     marginBottom: Layout.spacing.medium,
+    textAlign: 'left',
   },
   aboutText: {
     color: Colors.text,
     fontSize: Fonts.sizes.regular,
     marginBottom: Layout.spacing.small,
     lineHeight: 22,
+    textAlign: 'left',
   },
   conditionsRow: {
     flexDirection: "row",
@@ -323,7 +328,7 @@ const styles = StyleSheet.create({
     borderRadius: Layout.borderRadius.medium,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    alignSelf: "center",
+    alignSelf: "flex-start",
     marginTop: Layout.spacing.medium,
   },
   ctaButtonText: {
@@ -338,18 +343,12 @@ const styles = StyleSheet.create({
   ctaButtonTextPressed: {
     color: Colors.white,
   },
-  ctaButtonPressed: {
-    backgroundColor: Colors.secondary,
-  },
-  ctaButtonTextPressed: {
-    color: Colors.white,
-  },
   teamSection: {
-    marginTop: Layout.spacing.xxlarge,
-    marginBottom: Layout.spacing.xxlarge,
-    paddingHorizontal: Layout.spacing.large,
-    paddingTop: Layout.spacing.xxlarge,
-    paddingBottom: Layout.spacing.xxlarge,
+    marginTop: 50,
+    marginBottom: 50,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 24,
     backgroundColor: Colors.background,
   },
   teamHeaderRow: {
@@ -389,7 +388,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 24,
   },
   teamCard: {
     backgroundColor: '#e6ece9',
@@ -397,11 +395,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
     padding: 0,
-    width: '30%',
-    minWidth: 150,
-    maxWidth: 200,
+    width: '47%',
     height: 212,
-    flexGrow: 1,
     shadowColor: Colors.black,
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -418,30 +413,25 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 0,
     resizeMode: 'cover',
   },
+  teamTextContainer: {
+    padding: 8,
+  },
   teamName: {
-    fontWeight: '700',
-    fontSize: 14,
+    fontWeight: Fonts.weights.bold,
+    fontSize: Fonts.sizes.medium,
     color: Colors.black,
-    marginTop: 12,
+    marginTop: 4,
     marginBottom: 2,
     textAlign: 'center',
     textTransform: 'uppercase',
-    fontFamily: 'serif',
   },
   teamRole: {
     color: Colors.text,
     fontSize: Fonts.sizes.small,
     textAlign: 'center',
     opacity: 0.9,
-    marginBottom: 12,
-    marginTop: 2,
-  },
-  teamCardAccent: {
-    height: 4,
-    width: '100%',
-    backgroundColor: Colors.primary,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+    marginBottom: 4,
+    marginTop: 0,
   },
 
 

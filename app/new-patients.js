@@ -167,6 +167,7 @@ export default function NewPatientsScreen() {
           </View>
           {/* Coverage Section */}
           <View style={styles.coverageSection}>
+            <Image source={require("../assets/insurance.png")} style={styles.coverageImage} resizeMode="cover" />
             <View style={styles.coverageHeaderRow}>
               <View style={styles.coverageHeaderLine} />
               <Text style={styles.coverageHeading}>COVERAGE</Text>
@@ -191,7 +192,6 @@ export default function NewPatientsScreen() {
                 CONTACT US
               </Text>
             </TouchableOpacity>
-            <Image source={require("../assets/insurance.png")} style={styles.coverageImage} resizeMode="cover" />
           </View>
           {/* Logo Carousel Section */}
           <View style={styles.logoCarouselSection}>
@@ -346,12 +346,12 @@ export default function NewPatientsScreen() {
           </View>
           {/* First Appointment Section */}
           <View style={styles.appointmentSection}>
+            <Image source={require("../assets/treatment-centre.png")} style={styles.appointmentImage} resizeMode="cover" />
             <Text style={styles.appointmentStepTitle}><Text style={styles.appointmentStepTitleBlue}>3. </Text>First Appointment</Text>
             <Text style={styles.appointmentSubheading}>A Treatment Specialized For You</Text>
             <Text style={styles.appointmentDesc}>
               This appointment may require a little extra time, as the focus will be determining the appropriate magnet strength and coil position to ensure your treatment works effectively.
             </Text>
-            <Image source={require("../assets/treatment-centre.png")} style={styles.appointmentImage} resizeMode="cover" />
             <TouchableOpacity 
               style={[
                 styles.appointmentButton,
@@ -490,11 +490,11 @@ const styles = StyleSheet.create({
   },
   coverageSection: {
     backgroundColor: Colors.background,
-    borderRadius: 18,
-    marginHorizontal: 10,
-    marginTop: 12,
-    marginBottom: 24,
-    padding: 12,
+    borderRadius: 0,
+    marginHorizontal: 0,
+    marginTop: 50,
+    marginBottom: 50,
+    padding: 24,
     alignItems: 'flex-start',
     shadowColor: Colors.black,
     shadowOpacity: 0.06,
@@ -567,15 +567,16 @@ const styles = StyleSheet.create({
   coverageImage: {
     width: '100%',
     height: 140,
-    borderRadius: 18,
-    marginTop: 8,
+    borderRadius: 0,
+    marginTop: 0,
+    marginBottom: 18,
   },
   logoCarouselSection: {
     backgroundColor: Colors.primary,
     borderRadius: 0,
     marginHorizontal: 0,
     marginTop: 0,
-    marginBottom: 24,
+    marginBottom: 50,
     paddingVertical: 32,
     alignItems: 'center',
     justifyContent: 'center',
@@ -609,9 +610,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   formsSection: {
-    marginTop: 8,
-    marginBottom: 16,
-    paddingHorizontal: 8,
+    marginTop: 50,
+    marginBottom: 50,
+    paddingHorizontal: 24,
   },
   formCard: {
     backgroundColor: '#dbe5e7',
@@ -634,7 +635,7 @@ const styles = StyleSheet.create({
   },
   formCardButton: {
     backgroundColor: Colors.primary,
-    borderRadius: 32,
+    borderRadius: Layout.borderRadius.medium,
     paddingVertical: 12,
     paddingHorizontal: 32,
     flexDirection: 'row',
@@ -659,11 +660,11 @@ const styles = StyleSheet.create({
   },
   expectSection: {
     backgroundColor: Colors.background,
-    borderRadius: 18,
-    marginHorizontal: 10,
-    marginTop: 8,
-    marginBottom: 24,
-    padding: 12,
+    borderRadius: 0,
+    marginHorizontal: 0,
+    marginTop: 50,
+    marginBottom: 50,
+    padding: 24,
     alignItems: 'flex-start',
     shadowColor: Colors.black,
     shadowOpacity: 0.06,
@@ -763,11 +764,11 @@ const styles = StyleSheet.create({
   },
   assessmentSection: {
     backgroundColor: '#eaf4f3',
-    borderRadius: 18,
-    marginHorizontal: 10,
-    marginTop: 8,
-    marginBottom: 24,
-    padding: 12,
+    borderRadius: 0,
+    marginHorizontal: 0,
+    marginTop: 50,
+    marginBottom: 50,
+    padding: 24,
     alignItems: 'flex-start',
     shadowColor: Colors.black,
     shadowOpacity: 0.06,
@@ -842,11 +843,11 @@ const styles = StyleSheet.create({
   },
   appointmentSection: {
     backgroundColor: Colors.background,
-    borderRadius: 18,
-    marginHorizontal: 10,
-    marginTop: 8,
-    marginBottom: 24,
-    padding: 12,
+    borderRadius: 0,
+    marginHorizontal: 0,
+    marginTop: 50,
+    marginBottom: 50,
+    padding: 24,
     alignItems: 'flex-start',
     shadowColor: Colors.black,
     shadowOpacity: 0.06,
@@ -859,8 +860,8 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginBottom: 8,
     marginTop: 0,
-    textAlign: 'center',
-    alignSelf: 'center',
+    textAlign: 'left',
+    alignSelf: 'flex-start',
   },
   appointmentStepTitleBlue: {
     color: Colors.primary,
@@ -872,22 +873,22 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 12,
     marginTop: 0,
-    textAlign: 'center',
-    alignSelf: 'center',
+    textAlign: 'left',
+    alignSelf: 'flex-start',
   },
   appointmentDesc: {
     color: Colors.text,
     fontSize: Fonts.sizes.regular,
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 18,
     marginTop: 0,
     lineHeight: 20,
-    alignSelf: 'center',
+    alignSelf: 'flex-start',
   },
   appointmentImage: {
     width: '100%',
     height: 220,
-    borderRadius: 18,
+    borderRadius: 0,
     marginBottom: 18,
     marginTop: 0,
     alignSelf: 'center',
@@ -899,7 +900,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'center',
+    alignSelf: 'flex-start',
     marginTop: 0,
   },
   appointmentButtonText: {

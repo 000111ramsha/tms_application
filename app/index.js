@@ -395,6 +395,7 @@ export default function HomeScreen() {
                       resizeMode="contain"
                       priority={true}
                       lazy={false}
+                      accessibilityLabel="Better Business Bureau Accredited Business Badge"
                     />
                   </TouchableOpacity>
 
@@ -442,10 +443,9 @@ export default function HomeScreen() {
                     Keyboard.dismiss();
                   }}
                 >
-                  <Text style={styles.heroFormTitle} numberOfLines={1} ellipsizeMode="tail">
-                    Get In Touch With TMS Of Emerald Coast
+                  <Text style={styles.heroFormTitle} numberOfLines={2} ellipsizeMode="tail">
+                    Get In Touch With TMS Of Emerald Coast Today
                   </Text>
-                  <Text style={styles.heroFormTitleSecond}>Today</Text>
               
               <TextInput
                 style={[styles.heroFormInput, errors.name ? styles.heroFormInputError : null]}
@@ -459,6 +459,10 @@ export default function HomeScreen() {
                 autoCapitalize="words"
                 autoCorrect={false}
                 maxLength={50}
+                returnKeyType="next"
+                onSubmitEditing={() => {
+                  // Focus will move to next input automatically
+                }}
               />
               {errors.name ? (
                 <View style={styles.heroFormErrorContainer}>
@@ -490,6 +494,7 @@ export default function HomeScreen() {
                 accessibilityLabel="Your Email"
                 accessibilityHint="Enter your email address"
                 maxLength={100}
+                returnKeyType="done"
               />
               {errors.email ? (
                 <View style={styles.heroFormErrorContainer}>
@@ -577,6 +582,14 @@ export default function HomeScreen() {
 
             {/* Enhanced TMS Info Section */}
             <View style={styles.tmsInfoSection}>
+              <OptimizedImage 
+                source={require("../assets/patient-image.png")} 
+                style={styles.tmsInfoImage} 
+                resizeMode="cover"
+                lazy={true}
+                priority={false}
+                accessibilityLabel="Patient receiving TMS therapy treatment"
+              />
               <Text 
                 style={styles.tmsInfoHeading}
                 accessibilityRole="header"
@@ -619,18 +632,19 @@ export default function HomeScreen() {
                   />
                 </TouchableOpacity>
               </View>
-              <OptimizedImage 
-                source={require("../assets/patient-image.png")} 
-                style={styles.tmsInfoImage} 
-                resizeMode="cover"
-                lazy={true}
-                priority={false}
-              />
             </View>
 
             {/* Military TMS Section */}
             <View style={styles.militaryCardSection}>
               <View style={styles.militaryCard}>
+                <OptimizedImage 
+                  source={require("../assets/tms-treatment.jpg")} 
+                  style={styles.militaryCardImage} 
+                  resizeMode="cover"
+                  lazy={true}
+                  priority={false}
+                  accessibilityLabel="TMS treatment equipment and facility"
+                />
                 <Text 
                   style={styles.militaryCardHeading}
                   accessibilityRole="header"
@@ -641,13 +655,6 @@ export default function HomeScreen() {
                 <Text style={styles.militaryCardText}>
                   Therapy is increasingly being used to support military personnel, particularly in addressing conditions like Post-Traumatic Stress Disorder (PTSD), depression, and anxiety, which are common among veterans and active-duty members.
                 </Text>
-                <OptimizedImage 
-                  source={require("../assets/tms-treatment.jpg")} 
-                  style={styles.militaryCardImage} 
-                  resizeMode="cover"
-                  lazy={true}
-                  priority={false}
-                />
               </View>
 
               <Text 
@@ -811,7 +818,7 @@ const styles = StyleSheet.create({
   },
   contactButton: {
     backgroundColor: Colors.secondary,
-    paddingVertical: 8,
+    paddingVertical: 9,
     paddingHorizontal: 16,
     borderRadius: Layout.borderRadius.medium,
     alignSelf: 'flex-start',
@@ -841,10 +848,10 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weights.bold,
   },
   heroFormWrapper: {
-    marginHorizontal: 24,
+    marginHorizontal: 0,
     marginTop: 32,
-    marginBottom: 24,
-    borderRadius: Layout.borderRadius.xlarge,
+    marginBottom: 50,
+    borderRadius: 0,
     overflow: 'hidden',
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
@@ -856,7 +863,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   heroFormBackgroundImage: {
-    borderRadius: Layout.borderRadius.xlarge,
+    borderRadius: 0,
     resizeMode: 'cover',
   },
   heroFormSection: {
@@ -868,8 +875,8 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 15.5,
     fontWeight: Fonts.weights.bold,
-    textAlign: 'center',
-    marginBottom: 0,
+    textAlign: 'left',
+    marginBottom: 18,
     width: '100%',
     flexShrink: 1,
   },
@@ -877,7 +884,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 15.5,
     fontWeight: Fonts.weights.bold,
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 18,
     marginTop: 0,
   },
@@ -977,7 +984,7 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     padding: 24,
     marginHorizontal: 0,
-    marginBottom: 40,
+    marginBottom: 50,
   },
   tmsInfoHeading: {
     color: Colors.white,
@@ -1047,22 +1054,22 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 140,
     borderRadius: Layout.borderRadius.large,
-    marginTop: 18,
-    marginBottom: 24,
+    marginTop: 0,
+    marginBottom: 18,
   },
   militaryCardSection: {
     marginHorizontal: 0,
-    marginBottom: 40,
-    paddingHorizontal: 12,
+    marginBottom: 50,
+    paddingHorizontal: 0,
   },
   militaryCard: {
     backgroundColor: Colors.primary,
-    borderTopLeftRadius: Layout.borderRadius.xxlarge,
-    borderTopRightRadius: Layout.borderRadius.xxlarge,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
-    padding: 20,
-    marginHorizontal: 16,
+    padding: 24,
+    marginHorizontal: 0,
     marginBottom: 18,
     alignItems: 'flex-start',
   },
@@ -1071,29 +1078,32 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.large,
     fontWeight: Fonts.weights.bold,
     marginBottom: 8,
+    textAlign: 'left',
   },
   militaryCardText: {
     color: Colors.white,
     fontSize: Fonts.sizes.medium,
     marginBottom: 12,
+    textAlign: 'left',
   },
   militaryCardImage: {
     width: '100%',
     height: 170,
-    borderTopLeftRadius: Layout.borderRadius.large,
-    borderTopRightRadius: Layout.borderRadius.large,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
-    marginTop: 8,
+    marginTop: 0,
+    marginBottom: 18,
   },
   militarySectionHeading: {
     color: Colors.primary,
     fontSize: 17,
     fontWeight: Fonts.weights.bold,
     marginBottom: 8,
-    marginLeft: 16,
-    marginRight: 16,
     marginTop: 8,
+    paddingHorizontal: 24,
+    textAlign: 'left',
   },
   militarySectionHeading2: {
     color: Colors.primary,
@@ -1101,31 +1111,34 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weights.bold,
     marginTop: 16,
     marginBottom: 8,
-    marginLeft: 16,
+    paddingHorizontal: 24,
+    textAlign: 'left',
   },
   militarySectionSubheading: {
     color: Colors.primary,
     fontWeight: Fonts.weights.bold,
     fontSize: 15,
     marginBottom: 2,
-    marginLeft: 16,
-    marginRight: 16,
     marginTop: 8,
+    paddingHorizontal: 24,
+    textAlign: 'left',
   },
   militarySectionText: {
     color: Colors.text,
     fontSize: Fonts.sizes.medium,
     marginBottom: 2,
-    marginLeft: 16,
-    marginRight: 16,
+    paddingHorizontal: 24,
+    textAlign: 'left',
   },
   militarySectionList: {
-    marginLeft: 28,
+    paddingHorizontal: 24,
+    paddingLeft: 36,
     marginBottom: 8,
   },
   militarySectionListItem: {
     color: Colors.text,
     fontSize: Fonts.sizes.medium,
     marginBottom: 2,
+    textAlign: 'left',
   },
 });

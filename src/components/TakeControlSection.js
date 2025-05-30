@@ -35,6 +35,15 @@ const TakeControlSection = ({
 
   return (
     <View style={[styles.takeControlSection, style]}>
+      <View style={styles.takeControlImageWrapper}>
+        <OptimizedImage 
+          source={imageSource} 
+          style={styles.takeControlImage} 
+          resizeMode="cover"
+          lazy={true}
+          priority={false}
+        />
+      </View>
       <Text style={styles.takeControlTitle}>{title}</Text>
       <Text style={styles.takeControlSubtitle}>{subtitle}</Text>
       <Text style={styles.takeControlText}>{description}</Text>
@@ -61,15 +70,6 @@ const TakeControlSection = ({
           style={styles.takeControlButtonIcon} 
         />
       </TouchableOpacity>
-      <View style={styles.takeControlImageWrapper}>
-        <OptimizedImage 
-          source={imageSource} 
-          style={styles.takeControlImage} 
-          resizeMode="cover"
-          lazy={true}
-          priority={false}
-        />
-      </View>
     </View>
   );
 };
@@ -77,43 +77,43 @@ const TakeControlSection = ({
 const styles = StyleSheet.create({
   takeControlSection: {
     backgroundColor: Colors.primary,
-    borderRadius: Layout.borderRadius.xxlarge,
+    borderRadius: 0,
     padding: 24,
-    marginHorizontal: 16,
+    marginHorizontal: 0,
     marginBottom: 0,
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   takeControlTitle: {
     color: Colors.white,
     fontSize: 24,
     fontWeight: Fonts.weights.bold,
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 0,
   },
   takeControlSubtitle: {
     color: Colors.overlayTextAccent, // This is '#4db3c9' - light blue/cyan color
     fontSize: 24,
     fontWeight: Fonts.weights.bold,
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 18,
     marginTop: 0,
   },
   takeControlText: {
     color: Colors.white,
     fontSize: 15,
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 24,
-    marginHorizontal: 8,
+    marginHorizontal: 0,
   },
   takeControlButton: {
     backgroundColor: Colors.white,
-    borderRadius: Layout.borderRadius.xxlarge,
+    borderRadius: Layout.borderRadius.medium,
     paddingVertical: 12,
     paddingHorizontal: 32,
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'center',
-    marginBottom: 24,
+    alignSelf: 'flex-start',
+    marginBottom: 0,
     marginTop: 0,
   },
   takeControlButtonText: {
@@ -135,8 +135,9 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#e5e7eb',
     borderRadius: Layout.borderRadius.large,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginTop: 0,
+    marginBottom: 18,
   },
   takeControlImage: {
     width: '100%',

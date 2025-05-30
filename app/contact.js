@@ -701,9 +701,9 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   contactCardWrapper: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 24,
+    marginHorizontal: 0,
+    marginBottom: 50,
+    borderRadius: 0,
     overflow: 'hidden',
     elevation: 3,
     shadowColor: Colors.black,
@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
   contactCardOverlay: {
     backgroundColor: Colors.contactOverlay,
     padding: 24,
-    borderRadius: 24,
+    borderRadius: 0,
   },
   supportContainer: {
     flexDirection: 'row',
