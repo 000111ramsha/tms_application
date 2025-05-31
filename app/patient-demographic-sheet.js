@@ -19,6 +19,7 @@ import { useScreenAnimation } from "../src/hooks/useScreenAnimation";
 import Colors from "../src/constants/Colors";
 import Fonts from "../src/constants/Fonts";
 import Layout from "../src/constants/Layout";
+import Spacing from "../src/constants/Spacing";
 
 export default function PatientDemographicSheetScreen() {
   const router = useRouter();
@@ -567,18 +568,19 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   formContainer: {
-    padding: Layout.spacing.large,
+    marginHorizontal: Layout.spacing.large,
+    marginTop: 0,
+    marginBottom: Spacing.SECTION_TO_SECTION,
   },
   section: {
-    marginBottom: 40,
-    paddingVertical: 16,
-    backgroundColor: Colors.white,
-    borderRadius: Layout.borderRadius.large,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 0,
     padding: Layout.spacing.large,
+    marginBottom: Spacing.SECTION_TO_SECTION,
     shadowColor: Colors.black,
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
   sectionTitleContainer: {
     flexDirection: 'row',

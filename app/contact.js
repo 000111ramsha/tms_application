@@ -14,6 +14,8 @@ import {
   Image,
   ImageBackground,
   Animated,
+  Pressable,
+  Keyboard,
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -294,7 +296,13 @@ export default function ContactScreen() {
           </View>
 
           <View style={styles.contentContainer}>
-          <View style={styles.formContainer}>
+          <Pressable
+            style={styles.formContainer}
+            onPress={() => {
+              clearAllErrors();
+              Keyboard.dismiss();
+            }}
+          >
               <Text style={styles.formTitle}>Send Us Message</Text>
               <Text style={styles.formSubtitle}>Reach Out for Immediate Support</Text>
 
@@ -346,6 +354,7 @@ export default function ContactScreen() {
               placeholderTextColor="#666"
               textColor="#222"
               minimumDate={new Date()} // Contact form should restrict to future dates
+              borderStyle="transparent"
             />
 
             {/* Email Field */}
@@ -441,17 +450,19 @@ export default function ContactScreen() {
               title="SEND MESSAGE"
               icon="send"
             />
-            </View>
+            </Pressable>
 
             {/* Optimized Map Section with Caching and Offline Support */}
-            <OptimizedMapbox
-              location={OFFICE_LOCATION}
-              initialStyle="satelliteStreets"
-              onPress={openInMaps}
-              onDirectionsPress={openInMaps}
-              showStyleButton={true}
-              showDirectionsButton={true}
-            />
+            <View style={styles.mapContainer}>
+              <OptimizedMapbox
+                location={OFFICE_LOCATION}
+                initialStyle="satelliteStreets"
+                onPress={openInMaps}
+                onDirectionsPress={openInMaps}
+                showStyleButton={true}
+                showDirectionsButton={true}
+              />
+            </View>
 
 
           </View>
@@ -477,8 +488,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: Layout.spacing.large,
-    marginTop: 0, // No extra top margin since previous section has marginBottom
+    marginHorizontal: Layout.spacing.large,
+    marginTop: 0,
+    marginBottom: Spacing.SECTION_TO_SECTION,
   },
   title: {
     fontSize: Fonts.sizes.xlarge,
@@ -545,19 +557,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#d3e1e1',
     padding: 20,
     borderRadius: 18,
-    marginBottom: 16,
+    marginBottom: Spacing.SECTION_TO_SECTION,
     borderWidth: 2,
     borderColor: '#b7c9c9',
+    shadowColor: Colors.black,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
   formTitle: {
     fontSize: Fonts.sizes.large,
     fontWeight: Fonts.weights.bold,
-    color: '#2a5d6b',
+    color: Colors.primary,
     marginBottom: Spacing.TEXT_SPACING,
     textAlign: 'left',
   },
   formSubtitle: {
-    fontSize: Fonts.sizes.regular,
+    fontSize: Fonts.sizes.medium,
     color: '#222',
     marginBottom: Layout.spacing.medium,
     textAlign: 'left',
@@ -573,10 +589,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderWidth: 2,
     borderColor: 'transparent',
-    borderRadius: Layout.borderRadius.small,
+    borderRadius: Layout.borderRadius.medium,
     padding: Spacing.FORM_INTERNAL,
     fontSize: Fonts.sizes.regular,
     color: '#222',
+    minHeight: 48,
   },
   inputError: {
     borderColor: Colors.error,
@@ -600,12 +617,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderWidth: 2,
     borderColor: 'transparent',
-    borderRadius: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
+    borderRadius: Layout.borderRadius.medium,
+    paddingVertical: Spacing.FORM_INTERNAL,
+    paddingHorizontal: Spacing.FORM_INTERNAL,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    minHeight: 48,
   },
   dropdownText: {
     fontSize: Fonts.sizes.regular,
@@ -613,15 +631,15 @@ const styles = StyleSheet.create({
   },
   dropdownOptions: {
     backgroundColor: '#fff',
-    borderRadius: 8,
+    borderRadius: Layout.borderRadius.medium,
     marginTop: 4,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#e0e0e0',
   },
   dropdownOption: {
-    paddingVertical: 14,
-    paddingHorizontal: 14,
+    paddingVertical: Spacing.FORM_INTERNAL,
+    paddingHorizontal: Spacing.FORM_INTERNAL,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
@@ -658,8 +676,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.heroOverlay,
     justifyContent: "center",
     alignItems: "flex-start",
-    paddingLeft: Layout.spacing.xlarge,
-    paddingTop: Layout.spacing.xxlarge,
+    paddingHorizontal: Layout.spacing.large,
+    paddingVertical: Layout.spacing.large,
   },
   heroTitle: {
     fontSize: Fonts.sizes.xxlarge,
@@ -672,10 +690,10 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   contactCardWrapper: {
-    marginHorizontal: 0,
-    marginTop: Spacing.HERO_TO_SECTION, // 32px from hero
-    marginBottom: Spacing.SECTION_TO_SECTION, // 50px to next section
-    borderRadius: 0,
+    marginHorizontal: Layout.spacing.large,
+    marginTop: 0,
+    marginBottom: Spacing.SECTION_TO_SECTION,
+    borderRadius: Layout.borderRadius.large,
     overflow: 'hidden',
     elevation: 3,
     shadowColor: Colors.black,
@@ -693,19 +711,19 @@ const styles = StyleSheet.create({
   },
   contactCardOverlay: {
     backgroundColor: Colors.contactOverlay,
-    padding: 24,
+    padding: Layout.spacing.large,
     borderRadius: 0,
   },
   supportContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.TEXT_SPACING,
   },
   supportLine: {
     width: 40,
     height: 3,
     backgroundColor: '#4db3c9',
-    marginRight: 12,
+    marginRight: Layout.spacing.medium,
   },
   contactCardTitle: {
     color: Colors.overlayTextAccent,
@@ -722,16 +740,16 @@ const styles = StyleSheet.create({
   },
   contactCardDesc: {
     color: Colors.overlayTextSecondary,
-    fontSize: Fonts.sizes.regular,
+    fontSize: Fonts.sizes.medium,
     marginBottom: Layout.spacing.medium,
   },
   contactCardInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: Layout.spacing.small,
   },
   contactCardIcon: {
-    marginRight: 12,
+    marginRight: Layout.spacing.medium,
   },
   contactCardInfoText: {
     color: Colors.overlayText,
@@ -742,8 +760,8 @@ const styles = StyleSheet.create({
   socialLinksContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
-    gap: 20,
+    marginTop: Layout.spacing.large,
+    gap: Layout.spacing.large,
   },
   socialIconButton: {
     width: 40,
@@ -756,7 +774,10 @@ const styles = StyleSheet.create({
   cardDivider: {
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    marginVertical: 20,
+    marginVertical: Layout.spacing.large,
+  },
+  mapContainer: {
+    marginBottom: Layout.spacing.xxlarge,
   },
 });
 

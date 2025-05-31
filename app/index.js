@@ -14,6 +14,7 @@ import {
   RefreshControl,
   Animated,
   ImageBackground,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -28,6 +29,7 @@ import FloatingActionButton from "../src/components/FloatingActionButton";
 import ModernDatePicker from "../src/components/ModernDatePicker";
 import SimpleVideoModal from "../src/components/SimpleVideoModal"; // Simplest and most reliable
 import SubmitButton from "../src/components/SubmitButton";
+import TouchableButton from "../src/components/TouchableButton";
 
 // Import context
 import { useScrollViewPadding } from "../src/context/BottomNavContext";
@@ -123,6 +125,11 @@ export default function HomeScreen() {
       question: "How Long Does TMS Treatment Session Last?",
       answer:
         "A typical TMS treatment session lasts about 20-40 minutes. The full course of treatment usually involves 5 sessions per week for 4-6 weeks, totaling 20-30 sessions.",
+    },
+    {
+      question: "Are There Any Side Effects of TMS Therapy?",
+      answer:
+        "TMS is well-tolerated. The most common side effect is mild scalp discomfort or headache, which usually resolves after a few sessions.",
     },
     {
       question: "Will My Insurance Cover TMS?",
@@ -330,11 +337,14 @@ export default function HomeScreen() {
               priority={true}
             >
               <View style={styles.heroOverlay}>
-                <View style={[styles.heroContent, isMobile && { width: "100%" }]}>
+                <View style={[styles.heroContent, (isMobile || Platform.OS === 'ios') && { width: "100%" }]}>
                   <Text 
                     style={[styles.heroTitle, styles.heroTitleMargin, isSmallDevice && { fontSize: 28 }]}
                     accessibilityRole="header"
                     accessibilityLevel={1}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit={true}
+                    minimumFontScale={0.8}
                   >
                     Discover Hope Without
                   </Text>
@@ -342,6 +352,9 @@ export default function HomeScreen() {
                     style={[styles.heroTitle, isSmallDevice && { fontSize: 28 }]}
                     accessibilityRole="header"
                     accessibilityLevel={1}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit={true}
+                    minimumFontScale={0.8}
                   >
                     Medication
                   </Text>
@@ -371,23 +384,25 @@ export default function HomeScreen() {
 
                   {/* Buttons Row */}
                   <View style={styles.heroButtonsRow}>
-                    <TouchableOpacity 
+                    <TouchableButton 
                       style={styles.contactButton} 
                       onPress={() => router.push("/contact")}
-                      accessibilityRole="button"
-                      accessibilityLabel="Contact Us"
+                      accessibility={{
+                        label: "Contact Us"
+                      }}
                     >
                       <Text style={styles.contactButtonText}>Contact Us</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
+                    </TouchableButton>
+                    <TouchableButton 
                       style={styles.videoButton}
                       onPress={handleWatchVideo}
-                      accessibilityRole="button"
-                      accessibilityLabel="Watch Video"
+                      accessibility={{
+                        label: "Watch Video"
+                      }}
                     >
                       <Ionicons name="play-outline" size={16} color="white" style={styles.videoIcon} />
                       <Text style={styles.videoButtonText}>Watch Video</Text>
-                    </TouchableOpacity>
+                    </TouchableButton>
                   </View>
                 </View>
               </View>
@@ -443,6 +458,7 @@ export default function HomeScreen() {
                 onFocus={() => clearError("date")}
                 onBlur={() => {}}
                 style={styles.heroFormDatePicker}
+                borderStyle="transparent"
               />
               
               <TextInput
@@ -467,14 +483,15 @@ export default function HomeScreen() {
                 </View>
               ) : null}
               
-              <TouchableOpacity
+              <TouchableButton
                 style={[styles.heroFormDropdown, errors.consultationType ? styles.heroFormInputError : null]}
                 onPress={() => setShowConsultationOptions(!showConsultationOptions)}
                 onPressIn={() => clearError("consultationType")}
-                accessibilityRole="button"
-                accessibilityLabel="Consultation Type"
-                accessibilityHint="Select type of consultation"
-                accessibilityState={{ expanded: showConsultationOptions }}
+                accessibility={{
+                  label: "Consultation Type",
+                  hint: "Select type of consultation",
+                  state: { expanded: showConsultationOptions }
+                }}
               >
                 <Text style={styles.heroFormDropdownText}>{fields.consultationType}</Text>
                 <Ionicons 
@@ -483,23 +500,24 @@ export default function HomeScreen() {
                   color="#333" 
                   style={{ marginLeft: 8 }} 
                 />
-              </TouchableOpacity>
+              </TouchableButton>
               
               {showConsultationOptions && (
                 <View style={styles.heroFormDropdownOptions}>
                   {['Consultation', 'Family Counseling', 'Anxiety Disorder', 'Depression', 'TMS Treatment'].map(option => (
-                    <TouchableOpacity
+                    <TouchableButton
                       key={option}
                       style={styles.heroFormDropdownOption}
                       onPress={() => {
                         setField("consultationType", option);
                         setShowConsultationOptions(false);
                       }}
-                      accessibilityRole="button"
-                      accessibilityLabel={option}
+                      accessibility={{
+                        label: option
+                      }}
                     >
                       <Text style={styles.heroFormDropdownOptionText}>{option}</Text>
-                    </TouchableOpacity>
+                    </TouchableButton>
                   ))}
                 </View>
               )}
@@ -519,7 +537,7 @@ export default function HomeScreen() {
                 isSubmitting={isSubmitting}
                 disabled={isSubmitting}
                 title="CONTACT US"
-                icon="arrow-forward"
+                icon="send"
                 style={styles.heroFormButtonOverride}
               />
              </Pressable>
@@ -558,31 +576,25 @@ export default function HomeScreen() {
                 TMS therapy works by using magnetic pulses to gently stimulate specific areas of the brain involved in mood regulation. These pulses help activate brain cells, which can improve symptoms of depression and other mental health conditions. The procedure is non-invasive, painless, and does not require medication.
               </Text>
               <View style={styles.tmsInfoButtonRow}>
-                <TouchableOpacity 
-                  style={[
-                    styles.tmsInfoButton,
-                    pressedStates.learnMore && styles.tmsInfoButtonPressed
-                  ]}
+                <TouchableButton 
+                  style={styles.tmsInfoButton}
+                  pressedStyle={styles.tmsInfoButtonPressed}
                   onPress={handleLearnMore}
-                  onPressIn={() => setPressedState("learnMore", true)}
-                  onPressOut={() => setPressedState("learnMore", false)}
-                  activeOpacity={1}
-                  accessibilityRole="button"
-                  accessibilityLabel="Learn More about TMS"
+                  enablePressEffects={true}
+                  accessibility={{
+                    label: "Learn More about TMS"
+                  }}
                 >
-                  <Text style={[
-                    styles.tmsInfoButtonText,
-                    pressedStates.learnMore && styles.tmsInfoButtonTextPressed
-                  ]}>
+                  <Text style={styles.tmsInfoButtonText}>
                     LEARN MORE
                   </Text>
                   <Ionicons 
                     name="arrow-forward" 
                     size={18} 
-                    color={pressedStates.learnMore ? Colors.white : Colors.white} 
+                    color={Colors.white} 
                     style={styles.tmsInfoButtonIcon} 
                   />
-                </TouchableOpacity>
+                </TouchableButton>
               </View>
             </View>
 
@@ -749,7 +761,8 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     flexDirection: "row",
-    padding: Layout.spacing.large,
+    paddingHorizontal: Layout.spacing.large,
+    paddingVertical: Layout.spacing.large,
   },
   heroContent: {
     flex: 1,
@@ -801,7 +814,7 @@ const styles = StyleSheet.create({
   },
   contactButton: {
     backgroundColor: Colors.secondary,
-    paddingVertical: Layout.spacing.medium,
+    paddingVertical: 9,
     paddingHorizontal: Layout.spacing.large,
     borderRadius: Layout.borderRadius.medium,
     alignSelf: 'flex-start',
@@ -817,7 +830,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.white,
-    paddingVertical: Layout.spacing.medium,
+    paddingVertical: 8,
     paddingHorizontal: Layout.spacing.large,
     borderRadius: Layout.borderRadius.medium,
     backgroundColor: Colors.transparent,
@@ -831,10 +844,10 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weights.bold,
   },
   heroFormWrapper: {
-    marginHorizontal: 0,
+    marginHorizontal: Layout.spacing.large,
     marginTop: Spacing.HERO_TO_SECTION, // 32px from hero
     marginBottom: Spacing.SECTION_TO_SECTION, // 50px to next section
-    borderRadius: 0,
+    borderRadius: Layout.borderRadius.large,
     overflow: 'hidden',
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
@@ -846,7 +859,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   heroFormBackgroundImage: {
-    borderRadius: 0,
+    borderRadius: Layout.borderRadius.large,
     resizeMode: 'cover',
   },
   heroFormSection: {
@@ -950,7 +963,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e8f4f8',
     borderRadius: 0,
     padding: 24,
-    marginHorizontal: 0,
+    marginHorizontal: Layout.spacing.large,
     marginBottom: Spacing.SECTION_TO_SECTION,
   },
   tmsInfoHeading: {
@@ -1019,6 +1032,8 @@ const styles = StyleSheet.create({
   },
   tmsInfoButtonPressed: {
     backgroundColor: Colors.secondary,
+    transform: [{ scale: 0.98 }],
+    shadowOpacity: 0.05,
   },
   tmsInfoButtonTextPressed: {
     color: Colors.white,
@@ -1031,9 +1046,16 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   militaryCardSection: {
-    marginHorizontal: 0,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 0,
+    padding: Layout.spacing.large,
+    marginHorizontal: Layout.spacing.large,
     marginBottom: Spacing.SECTION_TO_SECTION,
     paddingHorizontal: 0,
+    shadowColor: Colors.black,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
   militaryCard: {
     backgroundColor: Colors.primary,
@@ -1072,7 +1094,7 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weights.bold,
     marginBottom: Spacing.TEXT_SPACING,
     marginTop: Spacing.TEXT_SPACING,
-    paddingHorizontal: Layout.spacing.large,
+    paddingHorizontal: Layout.spacing.xlarge,
     textAlign: 'left',
   },
   militarySectionHeading2: {
@@ -1081,7 +1103,7 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weights.bold,
     marginTop: Layout.spacing.medium,
     marginBottom: Spacing.TEXT_SPACING,
-    paddingHorizontal: Layout.spacing.large,
+    paddingHorizontal: Layout.spacing.xlarge,
     textAlign: 'left',
   },
   militarySectionSubheading: {
@@ -1097,12 +1119,12 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: Fonts.sizes.medium,
     marginBottom: 2,
-    paddingHorizontal: Layout.spacing.large,
+    paddingHorizontal: Layout.spacing.xlarge,
     textAlign: 'left',
   },
   militarySectionList: {
-    paddingHorizontal: 24,
-    paddingLeft: 36,
+    paddingHorizontal: Layout.spacing.xlarge,
+    paddingLeft: Layout.spacing.xxlarge,
     marginBottom: 8,
   },
   militarySectionListItem: {

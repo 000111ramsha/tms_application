@@ -9,6 +9,7 @@ import { useResponsiveDimensions } from '../hooks/useResponsiveDimensions';
 import Colors from '../constants/Colors';
 import Fonts from '../constants/Fonts';
 import Layout from '../constants/Layout';
+import Spacing from '../constants/Spacing';
 
 /**
  * Reusable FAQ Section Component
@@ -74,10 +75,12 @@ const FAQSection = ({
 
 const styles = StyleSheet.create({
   faqSection: {
-    paddingTop: 40,
-    paddingBottom: 60,
-    paddingHorizontal: 20,
+    paddingTop: Layout.spacing.xlarge,
+    paddingBottom: Layout.spacing.xlarge,
+    paddingHorizontal: Layout.spacing.large,
     backgroundColor: Colors.lightGray,
+    marginHorizontal: Layout.spacing.large,
+    marginBottom: Spacing.SECTION_TO_SECTION,
   },
   faqHeaderContainer: {
     flexDirection: 'row',

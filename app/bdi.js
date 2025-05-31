@@ -17,6 +17,7 @@ import { useScreenAnimation } from "../src/hooks/useScreenAnimation";
 import Colors from "../src/constants/Colors";
 import Fonts from "../src/constants/Fonts";
 import Layout from "../src/constants/Layout";
+import Spacing from "../src/constants/Spacing";
 
 const bdiQuestions = [
   "Sadness",
@@ -415,16 +416,18 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   formContainer: {
-    padding: Layout.spacing.large,
+    marginHorizontal: Layout.spacing.large,
+    marginTop: 0,
+    marginBottom: Spacing.SECTION_TO_SECTION,
   },
   instructionsSection: {
-    backgroundColor: Colors.white,
-    borderRadius: Layout.borderRadius.medium,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 0,
     padding: Layout.spacing.large,
-    marginBottom: Layout.spacing.large,
+    marginBottom: Spacing.SECTION_TO_SECTION,
     shadowColor: Colors.black,
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
   sectionTitle: {
@@ -462,7 +465,14 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   questionsSection: {
-    marginBottom: Layout.spacing.large,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 0,
+    padding: Layout.spacing.large,
+    marginBottom: Spacing.SECTION_TO_SECTION,
+    shadowColor: Colors.black,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
   questionCard: {
     backgroundColor: Colors.white,
@@ -523,13 +533,13 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   totalScoreSection: {
-    backgroundColor: Colors.white,
-    borderRadius: Layout.borderRadius.medium,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 0,
     padding: Layout.spacing.large,
-    marginBottom: Layout.spacing.large,
+    marginBottom: Spacing.SECTION_TO_SECTION,
     shadowColor: Colors.black,
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
   totalScoreLabel: {

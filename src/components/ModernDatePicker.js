@@ -71,11 +71,11 @@ const ModernDatePicker = ({
   onBlur = () => {},
   placeholderTextColor = "#bdbdbd", // Default to HomeScreen color
   textColor = "#222", // Default text color
+  borderStyle = "primary", // "primary" for colored border, "transparent" for transparent border
   ...props
 }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
-  const [fadeAnim] = useState(new Animated.Value(0));
   
   // State for custom date picker
   const [useCustomPicker, setUseCustomPicker] = useState(isDateOfBirth);
@@ -257,34 +257,19 @@ const ModernDatePicker = ({
     setIsPressed(true);
     onFocus();
     
-    if (Platform.OS === 'ios' || useCustomPicker) {
-      // Animate modal appearance
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-    
     setShowPicker(true);
     
-    // Reset pressed state after animation
+    // Reset pressed state after a brief moment
     setTimeout(() => setIsPressed(false), 150);
-  }, [disabled, onFocus, fadeAnim, useCustomPicker]);
+  }, [disabled, onFocus]);
 
   // Handle iOS modal close
   const handleIOSModalClose = useCallback(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      setShowPicker(false);
-      setShowMonthDropdown(false);
-      setShowYearDropdown(false);
-      onBlur();
-    });
-  }, [fadeAnim, onBlur]);
+    setShowPicker(false);
+    setShowMonthDropdown(false);
+    setShowYearDropdown(false);
+    onBlur();
+  }, [onBlur]);
 
   // Render custom date picker with dropdowns
   const renderCustomDatePicker = () => (
@@ -419,26 +404,12 @@ const ModernDatePicker = ({
       animationType="none"
       onRequestClose={handleIOSModalClose}
     >
-      <Animated.View 
-        style={[styles.modalOverlay, { opacity: fadeAnim }]}
-      >
+      <View style={styles.modalOverlay}>
         <Pressable 
           style={styles.modalBackdrop} 
           onPress={handleIOSModalClose}
         />
-        <Animated.View 
-          style={[
-            styles.modalContent,
-            {
-              transform: [{
-                translateY: fadeAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [300, 0],
-                })
-              }]
-            }
-          ]}
-        >
+        <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <TouchableOpacity 
               onPress={handleIOSModalClose}
@@ -464,10 +435,12 @@ const ModernDatePicker = ({
               minimumDate={getMinimumDate()}
               maximumDate={getMaximumDate()}
               style={styles.iosDatePicker}
+              accentColor={Colors.primary}
+              themeVariant="light"
             />
           )}
-        </Animated.View>
-      </Animated.View>
+        </View>
+      </View>
     </Modal>
   );
 
@@ -480,6 +453,13 @@ const ModernDatePicker = ({
           error ? styles.dateInputError : null,
           disabled ? styles.dateInputDisabled : null,
           isPressed ? styles.dateInputPressed : null,
+          borderStyle === "transparent" ? { 
+            borderWidth: 2, 
+            borderColor: "transparent" 
+          } : { 
+            borderWidth: 1, 
+            borderColor: Colors.primary 
+          },
         ]}
         onPress={handlePress}
         disabled={disabled}
@@ -525,6 +505,7 @@ const ModernDatePicker = ({
           onChange={handleDateChange}
           minimumDate={getMinimumDate()}
           maximumDate={getMaximumDate()}
+          accentColor={Colors.primary}
         />
       )}
 
@@ -543,13 +524,12 @@ const styles = StyleSheet.create({
   },
   dateInput: {
     backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.primary,
     borderRadius: Layout.borderRadius.medium,
     padding: 14,
     fontSize: Fonts.sizes.regular,
     color: '#000000',
     marginBottom: 0,
+    minHeight: 48,
   },
   dateInputNoMargin: {
     marginBottom: 0,
@@ -575,7 +555,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     flex: 1,
-    fontSize: Fonts.sizes.medium,
+    fontSize: Fonts.sizes.regular,
   },
 
   disabledText: {
@@ -604,17 +584,29 @@ const styles = StyleSheet.create({
   // iOS Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(44, 82, 100, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
   modalBackdrop: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   modalContent: {
     backgroundColor: Colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 34, // Safe area padding for iOS
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
+    shadowColor: Colors.black,
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 10,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -624,19 +616,22 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.lightGray,
+    backgroundColor: '#f8f9fa',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   modalTitle: {
     fontSize: Fonts.sizes.large,
     fontWeight: Fonts.weights.bold,
-    color: Colors.text,
+    color: Colors.primary,
   },
   modalCloseButton: {
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: Layout.borderRadius.medium,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#e0e0e0',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#d0d0d0',
   },
   modalCloseText: {
     fontSize: Fonts.sizes.medium,
@@ -660,8 +655,10 @@ const styles = StyleSheet.create({
   },
   customDatePicker: {
     padding: 20,
-    maxHeight: 500,
+    maxHeight: 450,
     backgroundColor: Colors.white,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   calendarHeader: {
     flexDirection: 'row',
@@ -670,12 +667,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.lightGray,
+    backgroundColor: '#f8f9fa',
   },
   navButton: {
     padding: 10,
     borderRadius: Layout.borderRadius.small,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: Colors.primary,
   },
   monthYearContainer: {
     flexDirection: 'row',
@@ -693,14 +691,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 10,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: Colors.primary,
     borderRadius: Layout.borderRadius.small,
     backgroundColor: Colors.white,
     minWidth: 80,
   },
   headerDropdownText: {
     fontSize: Fonts.sizes.medium,
-    color: Colors.text,
+    color: Colors.primary,
     fontWeight: Fonts.weights.bold,
   },
   headerDropdownOptions: {
@@ -711,11 +709,11 @@ const styles = StyleSheet.create({
     maxHeight: 180,
     backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: Colors.primary,
     borderRadius: Layout.borderRadius.medium,
     zIndex: 1000,
     elevation: 8,
-    shadowColor: Colors.black,
+    shadowColor: Colors.primary,
     shadowOpacity: 0.15,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -723,7 +721,7 @@ const styles = StyleSheet.create({
   headerDropdownOption: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f8f9fa',
+    borderBottomColor: Colors.lightGray,
   },
   headerDropdownOptionText: {
     fontSize: Fonts.sizes.medium,
@@ -748,7 +746,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.primary,
     borderRadius: Layout.borderRadius.medium,
-    backgroundColor: 'rgba(42, 93, 107, 0.1)',
+    backgroundColor: 'rgba(44, 82, 100, 0.1)',
   },
   todayButtonText: {
     fontSize: Fonts.sizes.medium,
@@ -761,7 +759,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.lightGray,
   },
   dayNameCell: {
     width: '14.28%', // 7 days = 100% / 7
@@ -807,7 +805,7 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weights.bold,
   },
   todayDayCell: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: 'rgba(44, 82, 100, 0.1)',
     borderWidth: 1,
     borderColor: Colors.primary,
   },

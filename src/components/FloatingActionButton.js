@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Animated, Linking, Alert } from 'react-native';
+import { StyleSheet, View, Animated, Linking, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import TouchableButton from './TouchableButton';
 
 // Import constants
 import Colors from '../constants/Colors';
@@ -107,15 +108,15 @@ const FloatingActionButton = ({ style = {} }) => {
           },
         ]}
       >
-        <TouchableOpacity
+        <TouchableButton
           style={[styles.actionButtonTouchable, { backgroundColor: action.color }]}
           onPress={action.onPress}
-          activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel={action.label}
+          accessibility={{
+            label: action.label
+          }}
         >
           <Ionicons name={action.icon} size={20} color={Colors.white} />
-        </TouchableOpacity>
+        </TouchableButton>
       </Animated.View>
     );
   };
@@ -139,25 +140,25 @@ const FloatingActionButton = ({ style = {} }) => {
           },
         ]}
       >
-        <TouchableOpacity
+        <TouchableButton
           style={styles.mainButtonTouchable}
           onPress={toggleExpanded}
-          activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel={isExpanded ? "Close contact options" : "Open contact options"}
-          accessibilityState={{ expanded: isExpanded }}
+          accessibility={{
+            label: isExpanded ? "Close contact options" : "Open contact options",
+            state: { expanded: isExpanded }
+          }}
         >
           <Ionicons 
             name={isExpanded ? "close" : "add"} 
             size={24} 
             color={Colors.white} 
           />
-        </TouchableOpacity>
+        </TouchableButton>
       </Animated.View>
       
       {/* Backdrop */}
       {isExpanded && (
-        <TouchableOpacity
+        <TouchableButton
           style={styles.backdrop}
           onPress={toggleExpanded}
           activeOpacity={1}
@@ -170,7 +171,7 @@ const FloatingActionButton = ({ style = {} }) => {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 50, // Moved down from 100 to 80
+    bottom: 50,
     right: 20,
     alignItems: 'center',
     zIndex: 1000,

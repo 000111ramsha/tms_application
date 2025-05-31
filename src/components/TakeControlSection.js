@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { StyleSheet, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import OptimizedImage from './OptimizedImage';
+import TouchableButton from './TouchableButton';
 
 // Import constants
 import Colors from '../constants/Colors';
 import Fonts from '../constants/Fonts';
 import Layout from '../constants/Layout';
+import Spacing from '../constants/Spacing';
 
 /**
  * Reusable Take Control Section Component
@@ -23,7 +25,6 @@ const TakeControlSection = ({
   style = {}
 }) => {
   const router = useRouter();
-  const [isPressed, setIsPressed] = useState(false);
 
   const handlePress = () => {
     if (onPress) {
@@ -47,29 +48,25 @@ const TakeControlSection = ({
       <Text style={styles.takeControlTitle}>{title}</Text>
       <Text style={styles.takeControlSubtitle}>{subtitle}</Text>
       <Text style={styles.takeControlText}>{description}</Text>
-      <TouchableOpacity 
-        style={[
-          styles.takeControlButton, 
-          isPressed && styles.takeControlButtonPressed
-        ]} 
+      <TouchableButton 
+        style={styles.takeControlButton}
+        pressedStyle={styles.takeControlButtonPressed}
         onPress={handlePress}
-        onPressIn={() => setIsPressed(true)}
-        onPressOut={() => setIsPressed(false)}
-        activeOpacity={1}
+        enablePressEffects={true}
+        accessibility={{
+          label: buttonText
+        }}
       >
-        <Text style={[
-          styles.takeControlButtonText,
-          isPressed && styles.takeControlButtonTextPressed
-        ]}>
+        <Text style={styles.takeControlButtonText}>
           {buttonText}
         </Text>
         <Ionicons 
           name="arrow-forward" 
           size={18} 
-          color={isPressed ? Colors.white : Colors.white} 
+          color={Colors.white} 
           style={styles.takeControlButtonIcon} 
         />
-      </TouchableOpacity>
+      </TouchableButton>
     </View>
   );
 };
@@ -79,8 +76,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f3f4',
     borderRadius: 0,
     padding: 24,
-    marginHorizontal: 0,
-    marginBottom: 0,
+    marginHorizontal: Layout.spacing.large,
+    marginBottom: Spacing.SECTION_TO_SECTION,
     alignItems: 'flex-start',
   },
   takeControlTitle: {
@@ -127,9 +124,6 @@ const styles = StyleSheet.create({
   },
   takeControlButtonPressed: {
     backgroundColor: Colors.secondary,
-  },
-  takeControlButtonTextPressed: {
-    color: Colors.white,
   },
   takeControlImageWrapper: {
     width: '100%',

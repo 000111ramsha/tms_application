@@ -1,6 +1,7 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import TouchableButton from './TouchableButton';
 import Colors from '../constants/Colors';
 import Layout from '../constants/Layout';
 import Fonts from '../constants/Fonts';
@@ -17,22 +18,25 @@ const SubmitButton = ({
   style = {} 
 }) => {
   return (
-    <TouchableOpacity 
+    <TouchableButton
       style={[
         styles.submitButton,
-        isPressed && styles.submitButtonPressed,
         (isSubmitting || disabled) && styles.submitButtonDisabled,
         style
       ]}
+      pressedStyle={styles.submitButtonPressed}
       onPress={onPress}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
-      activeOpacity={1}
       disabled={disabled || isSubmitting}
+      enablePressEffects={true}
+      accessibility={{
+        label: isSubmitting ? "Submitting..." : title,
+        state: { disabled: disabled || isSubmitting }
+      }}
     >
       <Text style={[
         styles.submitButtonText,
-        isPressed && styles.submitButtonTextPressed,
         (isSubmitting || disabled) && styles.submitButtonTextDisabled
       ]}>
         {isSubmitting ? "SUBMITTING..." : title}
@@ -41,11 +45,11 @@ const SubmitButton = ({
         <Ionicons 
           name={icon} 
           size={18} 
-          color={isPressed ? Colors.white : Colors.white} 
+          color={Colors.white} 
           style={styles.submitButtonIcon} 
         />
       )}
-    </TouchableOpacity>
+    </TouchableButton>
   );
 };
 
@@ -53,14 +57,14 @@ const styles = StyleSheet.create({
   submitButton: {
     backgroundColor: Colors.primary,
     borderRadius: Layout.borderRadius.medium,
-    paddingVertical: 14, // Standardized vertical padding
-    paddingHorizontal: 24, // Standardized horizontal padding  
+    paddingVertical: 14,
+    paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: Layout.spacing.large,
     marginBottom: Layout.spacing.xlarge,
-    minHeight: 48, // Consistent minimum height
+    minHeight: 48,
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -79,9 +83,6 @@ const styles = StyleSheet.create({
   },
   submitButtonPressed: {
     backgroundColor: Colors.secondary,
-  },
-  submitButtonTextPressed: {
-    color: Colors.white,
   },
   submitButtonDisabled: {
     backgroundColor: Colors.darkGray,

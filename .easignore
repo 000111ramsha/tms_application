@@ -6,6 +6,10 @@ android/.kotlin/
 .expo/
 node_modules/
 
+# Native project folders (for CNG/Prebuild)
+/android
+/ios
+
 # Documentation and README files
 *.md
 GRADLE_BUILD_TROUBLESHOOTING.md

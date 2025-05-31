@@ -2,17 +2,12 @@
   "expo": {
     "jsEngine": "hermes",
     "scheme": "tmsapp",
-    "name": "tms_app",
+    "name": "TmsApp",
     "slug": "tms_app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "assetBundlePatterns": [
       "assets/**/*"
     ],
@@ -20,7 +15,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.emrald.tms",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIStatusBarStyle": "UIStatusBarStyleLightContent",
+        "UIViewControllerBasedStatusBarAppearance": false
       }
     },
     "android": {
@@ -37,7 +34,16 @@
     },
     "plugins": [
       "expo-router",
-      "expo-video"
+      "expo-video",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "imageWidth": 150
+        }
+      ]
     ],
     "extra": {
       "router": {},

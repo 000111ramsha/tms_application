@@ -39,8 +39,8 @@ export const useBottomNavContext = () => {
 export const useScrollViewPadding = () => {
   const { bottomNavHeight } = useBottomNavContext();
 
-  // Reduce padding to minimize empty space at bottom
-  const paddingBottom = Math.max(bottomNavHeight - 10, 20); // Reduced buffer, minimum 20px
+  // Reduce padding to half to minimize empty space at bottom
+  const paddingBottom = Math.max((bottomNavHeight - 10, 5)); // Half the previous padding, minimum 10px
 
   return { paddingBottom };
 };

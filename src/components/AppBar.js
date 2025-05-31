@@ -50,39 +50,39 @@ export default function AppBar({ children }) {
   const navigationView = () => (
     <View style={styles.drawerContainer}>
       <View
-        style={[styles.drawerHeader, { paddingTop: insets.top > 0 ? insets.top : Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}
+        style={[styles.drawerHeader, { paddingTop: insets.top + 20 }]}
       >
-        <Image source={require("../../assets/tms-logo.png")} style={[styles.drawerLogo, { marginTop: 20 }]} resizeMode="contain" />
+        <Image source={require("../../assets/tms-logo.png")} style={styles.drawerLogo} resizeMode="contain" />
       </View>
       <View style={styles.drawerContent}>
         <TouchableOpacity style={styles.drawerItem} onPress={() => {
           router.push("/");
           setDrawerOpen(false);
-        }}>
+        }} activeOpacity={0.7}>
           <Text style={styles.drawerItemText}>HOME</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.drawerItem} onPress={() => {
           router.push("/new-patients");
           setDrawerOpen(false);
-        }}>
+        }} activeOpacity={0.7}>
           <Text style={styles.drawerItemText}>NEW PATIENTS</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.drawerItem} onPress={() => {
           router.push("/treatment");
           setDrawerOpen(false);
-        }}>
+        }} activeOpacity={0.7}>
           <Text style={styles.drawerItemText}>TREATMENT</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.drawerItem} onPress={() => {
           router.push("/about");
           setDrawerOpen(false);
-        }}>
+        }} activeOpacity={0.7}>
           <Text style={styles.drawerItemText}>ABOUT</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.drawerItem} onPress={() => {
           router.push("/contact");
           setDrawerOpen(false);
-        }}>
+        }} activeOpacity={0.7}>
           <Text style={styles.drawerItemText}>CONTACT</Text>
         </TouchableOpacity>
 
@@ -93,6 +93,7 @@ export default function AppBar({ children }) {
               Linking.openURL('https://www.facebook.com/profile.php?id=61568383621462&mibextid=LQQJ4di&rdid=NQbuAVyeIjACv0jp&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2FaAL7QjSekUpwb3oP%2F%3Fmibextid%3DLQQJ4di#');
               setDrawerOpen(false);
             }}
+            activeOpacity={0.7}
           >
             <FontAwesome name="facebook" size={22} color={Colors.primary} />
           </TouchableOpacity>
@@ -102,6 +103,7 @@ export default function AppBar({ children }) {
               Linking.openURL('https://www.linkedin.com/company/tms-of-emerald-coast-llc/');
               setDrawerOpen(false);
             }}
+            activeOpacity={0.7}
           >
             <FontAwesome name="linkedin" size={22} color={Colors.primary} />
           </TouchableOpacity>
@@ -111,6 +113,7 @@ export default function AppBar({ children }) {
               Linking.openURL('https://www.instagram.com/tmsemeraldcoast/?igsh=MWk1dHd1cmFwbWN6bg%3D%3D#');
               setDrawerOpen(false);
             }}
+            activeOpacity={0.7}
           >
             <FontAwesome name="instagram" size={22} color={Colors.primary} />
           </TouchableOpacity>
@@ -142,7 +145,7 @@ export default function AppBar({ children }) {
         onOpen={() => setDrawerOpen(true)}
         onClose={() => setDrawerOpen(false)}
       >
-        <View style={styles.safeArea}>
+        <View style={[styles.safeArea, { paddingTop: insets.top }]}>
           <View style={styles.navigation}>
             <TouchableOpacity
               style={styles.logoContainer}
@@ -154,12 +157,13 @@ export default function AppBar({ children }) {
             </TouchableOpacity>
 
             <View style={styles.navRight}>
-              <TouchableOpacity onPress={handleCall} style={styles.callButton}>
+              <TouchableOpacity onPress={handleCall} style={styles.callButton} activeOpacity={0.7}>
                 <Ionicons name="call" size={isSmallDevice ? 18 : 22} color={Colors.white} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.menuButton}
                 onPress={() => setDrawerOpen(true)}
+                activeOpacity={0.7}
               >
                 <Ionicons name="menu" size={isSmallDevice ? 22 : 26} color={Colors.white} />
               </TouchableOpacity>
@@ -179,7 +183,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: Colors.background,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   contentContainer: {
     flex: 1,
@@ -202,8 +205,8 @@ const styles = StyleSheet.create({
   },
   logoText: {
     color: Colors.white,
-    fontSize: Fonts.sizes.medium,
-    fontWeight: Fonts.weights.bold,
+    fontSize: Fonts.sizes.large,
+    fontWeight: Fonts.weights.medium,
     marginLeft: 8,
     flexShrink: 1,
   },

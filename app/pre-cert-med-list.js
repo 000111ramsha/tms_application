@@ -19,6 +19,7 @@ import { useScreenAnimation } from "../src/hooks/useScreenAnimation";
 import Colors from "../src/constants/Colors";
 import Fonts from "../src/constants/Fonts";
 import Layout from "../src/constants/Layout";
+import Spacing from "../src/constants/Spacing";
 
 const medicationCategories = {
   SSRI: [
@@ -373,16 +374,18 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   formContainer: {
-    padding: Layout.spacing.large,
+    marginHorizontal: Layout.spacing.large,
+    marginTop: 0,
+    marginBottom: Spacing.SECTION_TO_SECTION,
   },
   personalInfoSection: {
-    backgroundColor: Colors.white,
-    borderRadius: Layout.borderRadius.medium,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 0,
     padding: Layout.spacing.large,
-    marginBottom: Layout.spacing.large,
+    marginBottom: Spacing.SECTION_TO_SECTION,
     shadowColor: Colors.black,
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
   sectionTitleContainer: {
@@ -417,13 +420,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   categorySection: {
-    backgroundColor: Colors.white,
-    borderRadius: Layout.borderRadius.medium,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 0,
     padding: Layout.spacing.large,
-    marginBottom: Layout.spacing.large,
+    marginBottom: Spacing.SECTION_TO_SECTION,
     shadowColor: Colors.black,
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
   categoryTitleContainer: {
@@ -452,7 +455,7 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 20,
     height: 20,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: Colors.primary,
     borderRadius: 4,
     marginRight: 12,
@@ -469,7 +472,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   medicationDetailsContainer: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#f8f9fa',
     borderRadius: Layout.borderRadius.medium,
     padding: Layout.spacing.medium,
     marginTop: Layout.spacing.small,
