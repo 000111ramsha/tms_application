@@ -20,27 +20,27 @@ export default function BottomNavBar({ onLayout }) {
   const navItems = [
     {
       label: "Home",
-      icon: require("../../assets/home-icon.png"),
+      icon: require("../../assets/icon-home.png"),
       route: "/",
     },
     {
-      label: "About",
-      icon: require("../../assets/about-icon.png"),
-      route: "/about",
-    },
-    {
-      label: "Treatment",
-      icon: require("../../assets/treatment-icon.png"),
-      route: "/treatment",
-    },
-    {
       label: "New Patients",
-      icon: require("../../assets/new-patient-icon.png"),
+      icon: require("../../assets/icon-new-patients.png"),
       route: "/new-patients",
     },
     {
+      label: "Treatment",
+      icon: require("../../assets/icon-treatment.png"),
+      route: "/treatment",
+    },
+    {
+      label: "About",
+      icon: require("../../assets/icon-about.png"),
+      route: "/about",
+    },
+    {
       label: "Contact",
-      icon: require("../../assets/phone-icon.png"),
+      icon: require("../../assets/icon-contact.png"),
       route: "/contact",
     },
   ];

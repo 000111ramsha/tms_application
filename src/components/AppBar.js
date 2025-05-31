@@ -62,10 +62,10 @@ export default function AppBar({ children }) {
           <Text style={styles.drawerItemText}>HOME</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.drawerItem} onPress={() => {
-          router.push("/about");
+          router.push("/new-patients");
           setDrawerOpen(false);
         }}>
-          <Text style={styles.drawerItemText}>ABOUT</Text>
+          <Text style={styles.drawerItemText}>NEW PATIENTS</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.drawerItem} onPress={() => {
           router.push("/treatment");
@@ -74,10 +74,10 @@ export default function AppBar({ children }) {
           <Text style={styles.drawerItemText}>TREATMENT</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.drawerItem} onPress={() => {
-          router.push("/new-patients");
+          router.push("/about");
           setDrawerOpen(false);
         }}>
-          <Text style={styles.drawerItemText}>NEW PATIENTS</Text>
+          <Text style={styles.drawerItemText}>ABOUT</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.drawerItem} onPress={() => {
           router.push("/contact");

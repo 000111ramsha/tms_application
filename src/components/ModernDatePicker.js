@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -7,7 +7,8 @@ import {
   Platform,
   Modal,
   Pressable,
-  Animated
+  Animated,
+  ScrollView
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,16 +18,44 @@ import Colors from '../constants/Colors';
 import Fonts from '../constants/Fonts';
 import Layout from '../constants/Layout';
 
+// Generate months array
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+// Generate short month names
+const SHORT_MONTHS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+];
+
+// Day names
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+// Generate years array (from 1900 to current year only)
+const generateYears = () => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  for (let year = 1900; year <= currentYear; year++) {
+    years.push(year);
+  }
+  return years.reverse(); // Most recent years first
+};
+
+const YEARS = generateYears();
+
 /**
  * Modern Date Picker Component
  * 
  * Features:
  * - Sleek modern design
- * - Prevents selection of current date and past dates
+ * - Prevents selection of current date and past dates (unless isDateOfBirth is true)
  * - Cross-platform compatibility (iOS/Android)
  * - Smooth animations
  * - Error state handling
  * - Accessibility support
+ * - Special date of birth mode with easy month/year selection
  */
 const ModernDatePicker = ({
   value,
@@ -35,8 +64,9 @@ const ModernDatePicker = ({
   error = "",
   style = {},
   disabled = false,
-  minimumDate = null, // Will be set to tomorrow by default
+  minimumDate = null, // Will be set to tomorrow by default (or 1900 for DOB)
   maximumDate = null,
+  isDateOfBirth = false, // New prop for date of birth mode
   onFocus = () => {},
   onBlur = () => {},
   placeholderTextColor = "#bdbdbd", // Default to HomeScreen color
@@ -46,24 +76,37 @@ const ModernDatePicker = ({
   const [showPicker, setShowPicker] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
+  
+  // State for custom date picker
+  const [useCustomPicker, setUseCustomPicker] = useState(isDateOfBirth);
+  const [selectedMonth, setSelectedMonth] = useState(value ? value.getMonth() : new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(value ? value.getFullYear() : new Date().getFullYear());
+  const [selectedDay, setSelectedDay] = useState(value ? value.getDate() : new Date().getDate());
+  const [showMonthDropdown, setShowMonthDropdown] = useState(false);
+  const [showYearDropdown, setShowYearDropdown] = useState(false);
+
+  // Sync state with value prop changes
+  useEffect(() => {
+    if (value) {
+      setSelectedMonth(value.getMonth());
+      setSelectedYear(value.getFullYear());
+      setSelectedDay(value.getDate());
+    } else {
+      const today = new Date();
+      setSelectedMonth(today.getMonth());
+      setSelectedYear(today.getFullYear());
+      setSelectedDay(today.getDate());
+    }
+  }, [value]);
 
   // Set minimum date to tomorrow (users cannot select today or past dates)
   const getMinimumDate = useCallback(() => {
-    if (minimumDate) return minimumDate;
-    
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    return tomorrow;
+    return minimumDate; // Use provided minimumDate or undefined for no restriction
   }, [minimumDate]);
 
   // Set maximum date to 1 year from now if not specified
   const getMaximumDate = useCallback(() => {
-    if (maximumDate) return maximumDate;
-    
-    const oneYearFromNow = new Date();
-    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-    return oneYearFromNow;
+    return maximumDate; // Use provided maximumDate or undefined for no restriction
   }, [maximumDate]);
 
   // Format date for display
@@ -86,18 +129,6 @@ const ModernDatePicker = ({
     }
     
     if (event.type === 'set' && selectedDate) {
-      // Ensure selected date is not today or in the past
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const selected = new Date(selectedDate);
-      selected.setHours(0, 0, 0, 0);
-      
-      if (selected <= today) {
-        // Don't allow selection of today or past dates
-        return;
-      }
-      
       onDateChange(selectedDate);
       onBlur();
     }
@@ -108,6 +139,117 @@ const ModernDatePicker = ({
     }
   }, [onDateChange, onBlur]);
 
+  // Get default value for picker (current date, not minimum date)
+  const getDefaultPickerValue = useCallback(() => {
+    if (value) return value;
+    
+    // Always return current date as default, regardless of restrictions
+    return new Date();
+  }, [value]);
+
+  // Get number of days in a month
+  const getDaysInMonth = useCallback((month, year) => {
+    return new Date(year, month + 1, 0).getDate();
+  }, []);
+
+  // Generate days array for current month/year
+  const getDaysArray = useCallback(() => {
+    const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
+    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  }, [selectedMonth, selectedYear, getDaysInMonth]);
+
+  // Get first day of the month (0 = Sunday, 1 = Monday, etc.)
+  const getFirstDayOfMonth = useCallback(() => {
+    return new Date(selectedYear, selectedMonth, 1).getDay();
+  }, [selectedMonth, selectedYear]);
+
+  // Check if a day is today
+  const isToday = useCallback((day) => {
+    const today = new Date();
+    return (
+      day === today.getDate() &&
+      selectedMonth === today.getMonth() &&
+      selectedYear === today.getFullYear()
+    );
+  }, [selectedMonth, selectedYear]);
+
+  // Quick jump to today
+  const jumpToToday = useCallback(() => {
+    const today = new Date();
+    setSelectedMonth(today.getMonth());
+    setSelectedYear(today.getFullYear());
+    setSelectedDay(today.getDate());
+  }, []);
+
+  // Navigate months
+  const navigateMonth = useCallback((direction) => {
+    if (direction === 'prev') {
+      if (selectedMonth === 0) {
+        setSelectedMonth(11);
+        setSelectedYear(prev => prev - 1);
+      } else {
+        setSelectedMonth(prev => prev - 1);
+      }
+    } else {
+      if (selectedMonth === 11) {
+        setSelectedMonth(0);
+        setSelectedYear(prev => prev + 1);
+      } else {
+        setSelectedMonth(prev => prev + 1);
+      }
+    }
+    
+    // Adjust day if it doesn't exist in new month
+    const newDaysInMonth = getDaysInMonth(
+      direction === 'prev' 
+        ? (selectedMonth === 0 ? 11 : selectedMonth - 1)
+        : (selectedMonth === 11 ? 0 : selectedMonth + 1),
+      direction === 'prev' 
+        ? (selectedMonth === 0 ? selectedYear - 1 : selectedYear)
+        : (selectedMonth === 11 ? selectedYear + 1 : selectedYear)
+    );
+    
+    if (selectedDay > newDaysInMonth) {
+      setSelectedDay(newDaysInMonth);
+    }
+  }, [selectedMonth, selectedYear, selectedDay, getDaysInMonth]);
+
+  // Handle month selection
+  const handleMonthSelect = useCallback((monthIndex) => {
+    setSelectedMonth(monthIndex);
+    setShowMonthDropdown(false);
+    
+    // Adjust day if current day doesn't exist in new month
+    const daysInNewMonth = getDaysInMonth(monthIndex, selectedYear);
+    if (selectedDay > daysInNewMonth) {
+      setSelectedDay(daysInNewMonth);
+    }
+  }, [selectedYear, selectedDay, getDaysInMonth]);
+
+  // Handle year selection
+  const handleYearSelect = useCallback((year) => {
+    setSelectedYear(year);
+    setShowYearDropdown(false);
+    
+    // Adjust day if current day doesn't exist in new month/year (Feb 29 in non-leap year)
+    const daysInNewMonth = getDaysInMonth(selectedMonth, year);
+    if (selectedDay > daysInNewMonth) {
+      setSelectedDay(daysInNewMonth);
+    }
+  }, [selectedMonth, selectedDay, getDaysInMonth]);
+
+  // Handle day selection
+  const handleDaySelect = useCallback((day) => {
+    setSelectedDay(day);
+  }, []);
+
+  // Confirm custom date selection
+  const confirmCustomDate = useCallback(() => {
+    const newDate = new Date(selectedYear, selectedMonth, selectedDay);
+    onDateChange(newDate);
+    handleIOSModalClose();
+  }, [selectedYear, selectedMonth, selectedDay, onDateChange]);
+
   // Handle picker open
   const handlePress = useCallback(() => {
     if (disabled) return;
@@ -115,7 +257,7 @@ const ModernDatePicker = ({
     setIsPressed(true);
     onFocus();
     
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === 'ios' || useCustomPicker) {
       // Animate modal appearance
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -128,7 +270,7 @@ const ModernDatePicker = ({
     
     // Reset pressed state after animation
     setTimeout(() => setIsPressed(false), 150);
-  }, [disabled, onFocus, fadeAnim]);
+  }, [disabled, onFocus, fadeAnim, useCustomPicker]);
 
   // Handle iOS modal close
   const handleIOSModalClose = useCallback(() => {
@@ -138,11 +280,138 @@ const ModernDatePicker = ({
       useNativeDriver: true,
     }).start(() => {
       setShowPicker(false);
+      setShowMonthDropdown(false);
+      setShowYearDropdown(false);
       onBlur();
     });
   }, [fadeAnim, onBlur]);
 
-  // Render iOS Modal
+  // Render custom date picker with dropdowns
+  const renderCustomDatePicker = () => (
+    <View style={styles.customDatePicker}>
+      {/* Header with Month/Year Controls */}
+      <View style={styles.calendarHeader}>
+        <View style={styles.monthYearContainer}>
+          {/* Month Dropdown */}
+          <View style={styles.headerDropdownContainer}>
+            <TouchableOpacity
+              style={styles.headerDropdown}
+              onPress={() => {
+                setShowMonthDropdown(!showMonthDropdown);
+                setShowYearDropdown(false);
+              }}
+            >
+              <Text style={styles.headerDropdownText}>{SHORT_MONTHS[selectedMonth]}</Text>
+              <Ionicons name="chevron-down" size={16} color={Colors.primary} />
+            </TouchableOpacity>
+            
+            {showMonthDropdown && (
+              <ScrollView style={styles.headerDropdownOptions} nestedScrollEnabled>
+                {MONTHS.map((month, index) => (
+                  <TouchableOpacity
+                    key={month}
+                    style={[
+                      styles.headerDropdownOption,
+                      selectedMonth === index && styles.selectedHeaderOption
+                    ]}
+                    onPress={() => handleMonthSelect(index)}
+                  >
+                    <Text style={[
+                      styles.headerDropdownOptionText,
+                      selectedMonth === index && styles.selectedHeaderOptionText
+                    ]}>
+                      {month}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+
+          {/* Year Dropdown */}
+          <View style={styles.headerDropdownContainer}>
+            <TouchableOpacity
+              style={styles.headerDropdown}
+              onPress={() => {
+                setShowYearDropdown(!showYearDropdown);
+                setShowMonthDropdown(false);
+              }}
+            >
+              <Text style={styles.headerDropdownText}>{selectedYear}</Text>
+              <Ionicons name="chevron-down" size={16} color={Colors.primary} />
+            </TouchableOpacity>
+            
+            {showYearDropdown && (
+              <ScrollView style={styles.headerDropdownOptions} nestedScrollEnabled>
+                {YEARS.map((year) => (
+                  <TouchableOpacity
+                    key={year}
+                    style={[
+                      styles.headerDropdownOption,
+                      selectedYear === year && styles.selectedHeaderOption
+                    ]}
+                    onPress={() => handleYearSelect(year)}
+                  >
+                    <Text style={[
+                      styles.headerDropdownOptionText,
+                      selectedYear === year && styles.selectedHeaderOptionText
+                    ]}>
+                      {year}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </View>
+
+      {/* Day Names Header */}
+      <View style={styles.dayNamesHeader}>
+        {DAY_NAMES.map((dayName) => (
+          <View key={dayName} style={styles.dayNameCell}>
+            <Text style={styles.dayNameText}>{dayName}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Calendar Grid */}
+      <View style={styles.calendarGrid}>
+        {/* Empty cells for days before month starts */}
+        {Array.from({ length: getFirstDayOfMonth() }, (_, index) => (
+          <View key={`empty-${index}`} style={styles.emptyDayCell} />
+        ))}
+        
+        {/* Days of the month */}
+        {getDaysArray().map((day) => {
+          const dayIsToday = isToday(day);
+          const isSelected = selectedDay === day;
+          
+          return (
+            <TouchableOpacity
+              key={day}
+              style={[
+                styles.dayCell,
+                isSelected && styles.selectedDayCell,
+                dayIsToday && !isSelected && styles.todayDayCell
+              ]}
+              onPress={() => handleDaySelect(day)}
+            >
+              <Text style={[
+                styles.dayCellText,
+                isSelected && styles.selectedDayCellText,
+                dayIsToday && !isSelected && styles.todayDayCellText
+              ]}>
+                {day}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+
+  // Render iOS Modal with Custom Date Picker
   const renderIOSModal = () => (
     <Modal
       transparent
@@ -179,22 +448,24 @@ const ModernDatePicker = ({
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Select Date</Text>
             <TouchableOpacity 
-              onPress={handleIOSModalClose}
+              onPress={useCustomPicker ? confirmCustomDate : handleIOSModalClose}
               style={styles.modalDoneButton}
             >
               <Text style={styles.modalDoneText}>Done</Text>
             </TouchableOpacity>
           </View>
           
-          <DateTimePicker
-            value={value || getMinimumDate()}
-            mode="date"
-            display="spinner"
-            onChange={handleDateChange}
-            minimumDate={getMinimumDate()}
-            maximumDate={getMaximumDate()}
-            style={styles.iosDatePicker}
-          />
+          {useCustomPicker ? renderCustomDatePicker() : (
+            <DateTimePicker
+              value={getDefaultPickerValue()}
+              mode="date"
+              display="spinner"
+              onChange={handleDateChange}
+              minimumDate={getMinimumDate()}
+              maximumDate={getMaximumDate()}
+              style={styles.iosDatePicker}
+            />
+          )}
         </Animated.View>
       </Animated.View>
     </Modal>
@@ -246,16 +517,19 @@ const ModernDatePicker = ({
       ) : null}
 
       {/* Android Date Picker */}
-      {Platform.OS === 'android' && showPicker && (
+      {Platform.OS === 'android' && showPicker && !useCustomPicker && (
         <DateTimePicker
-          value={value || getMinimumDate()}
+          value={getDefaultPickerValue()}
           mode="date"
-          display="default"
+          display="calendar"
           onChange={handleDateChange}
           minimumDate={getMinimumDate()}
           maximumDate={getMaximumDate()}
         />
       )}
+
+      {/* Custom Date Picker Modal for Android DOB */}
+      {Platform.OS === 'android' && showPicker && useCustomPicker && renderIOSModal()}
 
       {/* iOS Modal Date Picker */}
       {Platform.OS === 'ios' && renderIOSModal()}
@@ -269,13 +543,13 @@ const styles = StyleSheet.create({
   },
   dateInput: {
     backgroundColor: Colors.white,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.primary,
     borderRadius: Layout.borderRadius.medium,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    fontSize: Fonts.sizes.medium,
-    marginBottom: 16,
+    padding: 14,
+    fontSize: Fonts.sizes.regular,
+    color: '#000000',
+    marginBottom: 0,
   },
   dateInputNoMargin: {
     marginBottom: 0,
@@ -357,26 +631,193 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   modalCloseButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: Layout.borderRadius.medium,
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
   modalCloseText: {
     fontSize: Fonts.sizes.medium,
-    color: Colors.gray,
-    fontWeight: Fonts.weights.medium,
+    color: Colors.text,
+    fontWeight: Fonts.weights.bold,
   },
   modalDoneButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: Layout.borderRadius.medium,
+    backgroundColor: Colors.primary,
   },
   modalDoneText: {
     fontSize: Fonts.sizes.medium,
-    color: Colors.primary,
+    color: Colors.white,
     fontWeight: Fonts.weights.bold,
   },
   iosDatePicker: {
     backgroundColor: Colors.white,
     paddingHorizontal: 20,
+  },
+  customDatePicker: {
+    padding: 20,
+    maxHeight: 500,
+    backgroundColor: Colors.white,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  navButton: {
+    padding: 10,
+    borderRadius: Layout.borderRadius.small,
+    backgroundColor: '#f8f9fa',
+  },
+  monthYearContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerDropdownContainer: {
+    flex: 1,
+    position: 'relative',
+    marginHorizontal: 5,
+  },
+  headerDropdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: Layout.borderRadius.small,
+    backgroundColor: Colors.white,
+    minWidth: 80,
+  },
+  headerDropdownText: {
+    fontSize: Fonts.sizes.medium,
+    color: Colors.text,
+    fontWeight: Fonts.weights.bold,
+  },
+  headerDropdownOptions: {
+    position: 'absolute',
+    top: 45,
+    left: 0,
+    right: 0,
+    maxHeight: 180,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: Layout.borderRadius.medium,
+    zIndex: 1000,
+    elevation: 8,
+    shadowColor: Colors.black,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  headerDropdownOption: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f8f9fa',
+  },
+  headerDropdownOptionText: {
+    fontSize: Fonts.sizes.medium,
+    color: Colors.text,
+    textAlign: 'center',
+  },
+  selectedHeaderOption: {
+    backgroundColor: Colors.primary,
+  },
+  selectedHeaderOptionText: {
+    color: Colors.white,
+    fontWeight: Fonts.weights.bold,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  todayButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    borderRadius: Layout.borderRadius.medium,
+    backgroundColor: 'rgba(42, 93, 107, 0.1)',
+  },
+  todayButtonText: {
+    fontSize: Fonts.sizes.medium,
+    color: Colors.primary,
+    fontWeight: Fonts.weights.bold,
+  },
+  dayNamesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  dayNameCell: {
+    width: '14.28%', // 7 days = 100% / 7
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  dayNameText: {
+    fontSize: Fonts.sizes.small,
+    color: Colors.primary,
+    fontWeight: Fonts.weights.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  dayCell: {
+    width: '14.28%', // 7 days = 100% / 7
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+    borderRadius: Layout.borderRadius.small,
+    backgroundColor: 'transparent',
+  },
+  selectedDayCell: {
+    backgroundColor: Colors.primary,
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  dayCellText: {
+    fontSize: Fonts.sizes.medium,
+    color: Colors.text,
+    fontWeight: Fonts.weights.medium,
+  },
+  selectedDayCellText: {
+    color: Colors.white,
+    fontWeight: Fonts.weights.bold,
+  },
+  todayDayCell: {
+    backgroundColor: '#e3f2fd',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  todayDayCellText: {
+    color: Colors.primary,
+    fontWeight: Fonts.weights.bold,
+  },
+  emptyDayCell: {
+    width: '14.28%', // 7 days = 100% / 7
+    aspectRatio: 1,
   },
 });
 

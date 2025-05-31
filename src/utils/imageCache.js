@@ -32,18 +32,13 @@ const CACHE_CONFIG = {
 
 /**
  * Preload critical images for better performance
- * Call this during app initialization
+ * For local bundled assets (require statements), no preloading is needed
+ * as they're already part of the app bundle and immediately available
  */
-export const preloadCriticalImages = async () => {
-  // For local assets (require statements), we don't need to prefetch
-  // as they're bundled with the app and available immediately
-  // expo-image will handle caching automatically when they're loaded
-  
-  try {
-    console.log('Critical images are bundled and ready for optimized loading');
-  } catch (error) {
-    console.warn('Failed to initialize critical images:', error);
-  }
+export const preloadCriticalImages = () => {
+  // Local assets are bundled with the app and available immediately
+  // No preloading needed - this function exists for API compatibility
+  return Promise.resolve();
 };
 
 /**

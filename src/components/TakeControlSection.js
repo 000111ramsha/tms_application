@@ -66,7 +66,7 @@ const TakeControlSection = ({
         <Ionicons 
           name="arrow-forward" 
           size={18} 
-          color={isPressed ? Colors.white : Colors.primary} 
+          color={isPressed ? Colors.white : Colors.white} 
           style={styles.takeControlButtonIcon} 
         />
       </TouchableOpacity>
@@ -76,7 +76,7 @@ const TakeControlSection = ({
 
 const styles = StyleSheet.create({
   takeControlSection: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#f0f3f4',
     borderRadius: 0,
     padding: 24,
     marginHorizontal: 0,
@@ -84,14 +84,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   takeControlTitle: {
-    color: Colors.white,
+    color: Colors.primary,
     fontSize: 24,
     fontWeight: Fonts.weights.bold,
     textAlign: 'left',
     marginBottom: 0,
   },
   takeControlSubtitle: {
-    color: Colors.overlayTextAccent, // This is '#4db3c9' - light blue/cyan color
+    color: Colors.text,
     fontSize: 24,
     fontWeight: Fonts.weights.bold,
     textAlign: 'left',
@@ -99,14 +99,14 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   takeControlText: {
-    color: Colors.white,
+    color: Colors.text,
     fontSize: 15,
     textAlign: 'left',
     marginBottom: 24,
     marginHorizontal: 0,
   },
   takeControlButton: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.primary,
     borderRadius: Layout.borderRadius.medium,
     paddingVertical: 12,
     paddingHorizontal: 32,
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   takeControlButtonText: {
-    color: Colors.primary,
+    color: Colors.white,
     fontWeight: Fonts.weights.bold,
     fontSize: 15,
     marginRight: 8,
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     marginLeft: 0,
   },
   takeControlButtonPressed: {
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.secondary,
   },
   takeControlButtonTextPressed: {
     color: Colors.white,

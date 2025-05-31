@@ -23,6 +23,7 @@ import AppBar from "../src/components/AppBar";
 import OptimizedMapbox from "../src/components/OptimizedMapbox";
 import ModernDatePicker from "../src/components/ModernDatePicker";
 import FloatingActionButton from "../src/components/FloatingActionButton";
+import SubmitButton from "../src/components/SubmitButton";
 
 // Import context
 import { useScrollViewPadding } from "../src/context/BottomNavContext";
@@ -35,6 +36,7 @@ import { useFadeAnimation } from "../src/hooks/useScreenAnimation";
 import Colors from "../src/constants/Colors";
 import Fonts from "../src/constants/Fonts";
 import Layout from "../src/constants/Layout";
+import Spacing from "../src/constants/Spacing";
 
 // Import utils
 import { validateEmail } from "../src/utils/validation";
@@ -251,7 +253,7 @@ export default function ContactScreen() {
 
           {/* Contact Info Card Section */}
           <View style={styles.contactCardWrapper}>
-            <ImageBackground source={require("../assets/contact.jpg")} style={styles.contactCardBg} imageStyle={styles.contactCardBgImg}>
+            <ImageBackground source={require("../assets/contact-form-bg.jpg")} style={styles.contactCardBg} imageStyle={styles.contactCardBgImg}>
               <View style={styles.contactCardOverlay}>
                 <View style={styles.supportContainer}>
                   <View style={styles.supportLine} />
@@ -321,6 +323,18 @@ export default function ContactScreen() {
             <ModernDatePicker
               value={fields.date}
               onDateChange={(date) => {
+                // Validate date for contact form only
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const selectedDate = new Date(date);
+                selectedDate.setHours(0, 0, 0, 0);
+                
+                if (selectedDate <= today) {
+                  setError("date", "Please select a future date");
+                  return;
+                }
+                
                 setField("date", date);
                 if (errors.date) validateDateField(date);
               }}
@@ -331,6 +345,7 @@ export default function ContactScreen() {
               style={styles.datePickerContainer}
               placeholderTextColor="#666"
               textColor="#222"
+              minimumDate={new Date()} // Contact form should restrict to future dates
             />
 
             {/* Email Field */}
@@ -416,29 +431,16 @@ export default function ContactScreen() {
               ) : null}
             </View>
 
-            <TouchableOpacity 
-              style={[
-                styles.contactButton, 
-                isSubmitting ? styles.contactButtonDisabled : null,
-                pressedStates.sendMessage && !isSubmitting && styles.contactButtonPressed
-              ]} 
+            <SubmitButton
               onPress={handleSubmit}
               onPressIn={() => !isSubmitting && setPressedState("sendMessage", true)}
               onPressOut={() => setPressedState("sendMessage", false)}
+              isPressed={pressedStates.sendMessage}
+              isSubmitting={isSubmitting}
               disabled={isSubmitting}
-              activeOpacity={1}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator size="small" color={Colors.white} />
-              ) : (
-                <Text style={[
-                  styles.contactButtonText,
-                  pressedStates.sendMessage && styles.contactButtonTextPressed
-                ]}>
-                  SEND MESSAGE
-                </Text>
-              )}
-            </TouchableOpacity>
+              title="SEND MESSAGE"
+              icon="send"
+            />
             </View>
 
             {/* Optimized Map Section with Caching and Offline Support */}
@@ -476,6 +478,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: Layout.spacing.large,
+    marginTop: 0, // No extra top margin since previous section has marginBottom
   },
   title: {
     fontSize: Fonts.sizes.xlarge,
@@ -547,32 +550,32 @@ const styles = StyleSheet.create({
     borderColor: '#b7c9c9',
   },
   formTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: Fonts.sizes.large,
+    fontWeight: Fonts.weights.bold,
     color: '#2a5d6b',
-    marginBottom: 2,
+    marginBottom: Spacing.TEXT_SPACING,
     textAlign: 'left',
   },
   formSubtitle: {
-    fontSize: 15,
+    fontSize: Fonts.sizes.regular,
     color: '#222',
-    marginBottom: 18,
+    marginBottom: Layout.spacing.medium,
     textAlign: 'left',
-    fontWeight: '400',
+    fontWeight: Fonts.weights.normal,
   },
   fieldContainer: {
-    marginBottom: 14,
+    marginBottom: Spacing.FORM_INTERNAL,
   },
   datePickerContainer: {
-    marginBottom: 14,
+    marginBottom: Spacing.FORM_INTERNAL,
   },
   input: {
     backgroundColor: '#fff',
     borderWidth: 2,
     borderColor: 'transparent',
-    borderRadius: 8,
-    padding: 14,
-    fontSize: 15,
+    borderRadius: Layout.borderRadius.small,
+    padding: Spacing.FORM_INTERNAL,
+    fontSize: Fonts.sizes.regular,
     color: '#222',
   },
   inputError: {
@@ -589,8 +592,8 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: Colors.error,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: Fonts.sizes.small,
+    fontWeight: Fonts.weights.medium,
     flex: 1,
   },
   dropdown: {
@@ -605,7 +608,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   dropdownText: {
-    fontSize: 15,
+    fontSize: Fonts.sizes.regular,
     color: '#222',
   },
   dropdownOptions: {
@@ -623,7 +626,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f0f0f0',
   },
   dropdownOptionText: {
-    fontSize: 15,
+    fontSize: Fonts.sizes.regular,
     color: '#222',
   },
   textArea: {
@@ -637,40 +640,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  contactButton: {
-    backgroundColor: '#2a5d6b',
-    borderRadius: 8,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-    width: '100%',
-    minHeight: 52,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  contactButtonDisabled: {
-    backgroundColor: '#999',
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  contactButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-    letterSpacing: 1,
-  },
-  contactButtonPressed: {
-    backgroundColor: Colors.secondary,
-  },
-  contactButtonTextPressed: {
-    color: Colors.white,
-  },
   heroSection: {
-    height: 220,
+    height: 180,
     position: "relative",
     marginBottom: Layout.spacing.large,
   },
@@ -702,7 +673,8 @@ const styles = StyleSheet.create({
   },
   contactCardWrapper: {
     marginHorizontal: 0,
-    marginBottom: 50,
+    marginTop: Spacing.HERO_TO_SECTION, // 32px from hero
+    marginBottom: Spacing.SECTION_TO_SECTION, // 50px to next section
     borderRadius: 0,
     overflow: 'hidden',
     elevation: 3,
@@ -744,14 +716,14 @@ const styles = StyleSheet.create({
   },
   contactCardSubtitle: {
     color: Colors.overlayText,
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontSize: Fonts.sizes.large,
+    fontWeight: Fonts.weights.bold,
+    marginBottom: Spacing.TEXT_SPACING,
   },
   contactCardDesc: {
     color: Colors.overlayTextSecondary,
-    fontSize: 15,
-    marginBottom: 18,
+    fontSize: Fonts.sizes.regular,
+    marginBottom: Layout.spacing.medium,
   },
   contactCardInfoRow: {
     flexDirection: 'row',
@@ -763,11 +735,10 @@ const styles = StyleSheet.create({
   },
   contactCardInfoText: {
     color: Colors.overlayText,
-    fontSize: 15,
+    fontSize: Fonts.sizes.regular,
     flex: 1,
     flexWrap: 'wrap',
   },
-
   socialLinksContainer: {
     flexDirection: 'row',
     justifyContent: 'center',

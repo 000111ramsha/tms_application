@@ -27,32 +27,40 @@ const OptimizedImage = ({
   ...props
 }) => {
   const [isVisible, setIsVisible] = useState(!lazy || priority);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // Check if source is local (bundled) asset
+  const isLocalAsset = typeof source === 'number' || (typeof source === 'object' && !source.uri);
+  
+  // For local assets, don't show loading states as they're immediately available
+  const [isLoading, setIsLoading] = useState(!isLocalAsset && true);
   const [hasError, setHasError] = useState(false);
   const viewRef = useRef(null);
 
   // Simple lazy loading - load immediately if not lazy or priority is set
   useEffect(() => {
-    if (!lazy || priority) {
+    if (!lazy || priority || isLocalAsset) {
       setIsVisible(true);
     } else {
-      // For lazy loading, we'll use a timeout to simulate viewport detection
-      // In a real implementation, you'd use onLayout and scroll events
+      // For lazy loading remote images only
       const timer = setTimeout(() => {
         setIsVisible(true);
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [lazy, priority]);
+  }, [lazy, priority, isLocalAsset]);
 
   const handleLoad = (event) => {
-    setIsLoading(false);
+    if (!isLocalAsset) {
+      setIsLoading(false);
+    }
     setHasError(false);
     onLoad?.(event);
   };
 
   const handleError = (error) => {
-    setIsLoading(false);
+    if (!isLocalAsset) {
+      setIsLoading(false);
+    }
     setHasError(true);
     onError?.(error);
   };
@@ -87,18 +95,18 @@ const OptimizedImage = ({
           placeholder={placeholder}
           onLoad={handleLoad}
           onError={handleError}
-          transition={200}
+          transition={isLocalAsset ? 0 : 200}
           {...props}
         />
       )}
       
-      {isLoading && isVisible && (
+      {isLoading && isVisible && !isLocalAsset && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color="#2c5264" />
         </View>
       )}
       
-      {!isVisible && lazy && (
+      {!isVisible && lazy && !isLocalAsset && (
         <View style={[styles.placeholder, style]} />
       )}
     </View>

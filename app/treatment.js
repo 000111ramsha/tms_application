@@ -20,6 +20,7 @@ import { useScreenAnimation } from "../src/hooks/useScreenAnimation";
 import Colors from "../src/constants/Colors";
 import Fonts from "../src/constants/Fonts";
 import Layout from "../src/constants/Layout";
+import Spacing from "../src/constants/Spacing";
 
 const tmsCards = [
   {
@@ -61,7 +62,7 @@ export default function TreatmentScreen() {
         <ScrollView style={{ flex: 1, backgroundColor: Colors.background }} contentContainerStyle={scrollViewPadding}>
         {/* Hero Section */}
         <View style={styles.heroSection}>
-          <Image source={require("../assets/video-thumbnail.png")} style={styles.heroImage} />
+          <Image source={require("../assets/treatment-hero.png")} style={styles.heroImage} />
           <View style={styles.heroOverlay}>
             <Text style={styles.heroTitle}>Treatment</Text>
           </View>
@@ -153,8 +154,9 @@ export default function TreatmentScreen() {
 
 const styles = StyleSheet.create({
   heroSection: {
-    height: 220,
+    height: 180,
     position: "relative",
+    marginBottom: Layout.spacing.large,
   },
   heroImage: {
     width: "100%",
@@ -197,8 +199,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     borderRadius: 0,
     marginHorizontal: 0,
-    marginTop: 50,
-    marginBottom: 50,
+    marginTop: Spacing.HERO_TO_SECTION,
+    marginBottom: Spacing.SECTION_TO_SECTION,
     paddingBottom: 24,
     padding: 24,
     alignItems: 'flex-start',
@@ -238,38 +240,38 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   featureTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: Fonts.sizes.xlarge,
+    fontWeight: Fonts.weights.bold,
     textAlign: 'left',
-    marginBottom: 10,
+    marginBottom: Layout.spacing.small,
     marginTop: 0,
   },
   featureTitleBlue: {
     color: Colors.primary,
-    fontWeight: '700',
+    fontWeight: Fonts.weights.bold,
   },
   featureTitleBlack: {
     color: Colors.text,
-    fontWeight: '700',
+    fontWeight: Fonts.weights.bold,
   },
   featureDesc: {
     color: Colors.text,
     fontSize: Fonts.sizes.regular,
     textAlign: 'left',
-    marginBottom: 18,
+    marginBottom: Layout.spacing.medium,
     marginTop: 0,
-    lineHeight: 20,
+    lineHeight: 24,
     paddingHorizontal: 0,
   },
   featureButton: {
     backgroundColor: Colors.primary,
     borderRadius: Layout.borderRadius.medium,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
+    paddingVertical: Layout.spacing.medium,
+    paddingHorizontal: Layout.spacing.large,
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: Layout.spacing.small,
   },
   featureButtonText: {
     color: Colors.white,
@@ -288,34 +290,36 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   tmsIfSection: {
-    marginTop: 50,
-    marginBottom: 50,
+    marginTop: 0,
+    marginBottom: Spacing.SECTION_TO_SECTION,
     paddingHorizontal: 24,
   },
   tmsIfTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: Fonts.sizes.large,
+    fontWeight: Fonts.weights.bold,
     textAlign: 'left',
-    marginBottom: 18,
+    marginBottom: Layout.spacing.medium,
     marginLeft: 0,
   },
   tmsIfTitleBlue: {
     color: Colors.primary,
-    fontWeight: '700',
+    fontWeight: Fonts.weights.bold,
   },
   tmsIfTitleBlack: {
     color: Colors.text,
-    fontWeight: '700',
+    fontWeight: Fonts.weights.bold,
   },
   tmsCardsRow: {
     gap: 18,
-    alignItems: 'center',
+    alignItems: 'stretch',
+    flexDirection: 'column',
   },
   tmsCard: {
-    borderRadius: 16,
+    borderRadius: Layout.borderRadius.large,
     alignItems: 'center',
-    padding: 18,
+    padding: Layout.spacing.medium,
     width: '96%',
+    minHeight: 280,
     maxWidth: 400,
     alignSelf: 'center',
     marginBottom: 0,
@@ -325,6 +329,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     overflow: 'hidden',
+    justifyContent: 'space-between',
   },
   tmsCardLogo: {
     width: 90,
@@ -334,17 +339,21 @@ const styles = StyleSheet.create({
   },
   tmsCardTitle: {
     color: Colors.text,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: Fonts.sizes.medium,
+    fontWeight: Fonts.weights.bold,
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: Spacing.TEXT_SPACING,
+    marginTop: Layout.spacing.small,
+    minHeight: 40,
   },
   tmsCardText: {
     color: Colors.white,
-    fontSize: 15,
+    fontSize: Fonts.sizes.regular,
     textAlign: 'center',
-    lineHeight: 20,
-    fontWeight: '400',
+    lineHeight: 24,
+    fontWeight: Fonts.weights.regular,
+    flex: 1,
+    textAlignVertical: 'top',
   },
   tmsCardLogoCircle: {
     width: 100,
@@ -356,7 +365,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   faqSectionCustom: {
-    marginTop: 24,
+    marginTop: 0,
   },
 
 

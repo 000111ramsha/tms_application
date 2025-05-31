@@ -10,6 +10,7 @@ import FloatingActionButton from "../src/components/FloatingActionButton";
 import Colors from "../src/constants/Colors";
 import Fonts from "../src/constants/Fonts";
 import Layout from "../src/constants/Layout";
+import Spacing from "../src/constants/Spacing";
 
 // Import context
 import { useScrollViewPadding } from "../src/context/BottomNavContext";
@@ -33,11 +34,6 @@ export default function AboutScreen() {
   useEffect(() => {
     preloadScreenImages('about');
   }, []);
-
-  const handlePlayVideo = () => {
-    // Implement video playback functionality
-    alert("Video playback would start here");
-  };
 
   const handleContact = () => {
     router.push("/contact");
@@ -74,30 +70,13 @@ export default function AboutScreen() {
           {/* Hero Section */}
           <HeroImage 
             source={require("../assets/about-hero.jpg")}
-            height={220}
+            height={180}
             priority={true}
           >
             <View style={styles.heroOverlay}>
               <Text style={styles.heroTitle}>About Us</Text>
             </View>
           </HeroImage>
-
-          {/* Video Section */}
-          <View style={styles.videoSection}>
-            <TouchableOpacity style={styles.videoContainer} onPress={handlePlayVideo}>
-              <OptimizedImage 
-                source={require("../assets/video-thumbnail.png")} 
-                style={styles.videoThumbnail}
-                resizeMode="cover"
-                lazy={true}
-                priority={false}
-                accessibilityLabel="TMS therapy introduction video thumbnail"
-              />
-              <View style={styles.playButton}>
-                <Ionicons name="play" size={36} color={Colors.white} />
-              </View>
-            </TouchableOpacity>
-          </View>
 
           {/* About Us Section */}
           <View style={styles.aboutSection}>
@@ -215,44 +194,11 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
-  videoSection: {
-    alignItems: "center",
-    marginTop: Layout.spacing.large,
-    marginBottom: Layout.spacing.large,
-    zIndex: 2,
-  },
-  videoContainer: {
-    width: 320,
-    height: 180,
-    borderRadius: Layout.borderRadius.large,
-    overflow: "hidden",
-    backgroundColor: Colors.gray,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 3,
-  },
-  videoThumbnail: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-  },
-  playButton: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: [{ translateX: -18 }, { translateY: -18 }],
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.playButtonOverlay,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   aboutSection: {
     backgroundColor: Colors.white,
     marginHorizontal: 0,
-    marginTop: 50,
-    marginBottom: 50,
+    marginTop: Spacing.HERO_TO_SECTION,
+    marginBottom: Spacing.SECTION_TO_SECTION,
     borderRadius: 0,
     padding: 24,
     elevation: 2,
@@ -344,8 +290,8 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   teamSection: {
-    marginTop: 50,
-    marginBottom: 50,
+    marginTop: 0,
+    marginBottom: Spacing.SECTION_TO_SECTION,
     paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 24,
@@ -374,15 +320,15 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   teamTitle: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: Fonts.sizes.xxlarge,
+    fontWeight: Fonts.weights.bold,
     color: Colors.primary,
     marginBottom: Layout.spacing.xlarge,
     textAlign: 'center',
   },
   teamTitleBold: {
     color: Colors.black,
-    fontWeight: '900',
+    fontWeight: Fonts.weights.bold,
   },
   teamGrid: {
     flexDirection: 'row',

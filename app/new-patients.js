@@ -19,6 +19,7 @@ import { useScreenAnimation } from "../src/hooks/useScreenAnimation";
 import Colors from "../src/constants/Colors";
 import Fonts from "../src/constants/Fonts";
 import Layout from "../src/constants/Layout";
+import Spacing from "../src/constants/Spacing";
 
 /**
  * New Patients Screen Component
@@ -31,6 +32,8 @@ export default function NewPatientsScreen() {
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   const logoScrollRef = useRef(null);
   const autoScrollIntervalRef = useRef(null);
+  const mainScrollRef = useRef(null);
+  const formsRef = useRef(null);
   
   // Use screen animation hook
   const { animatedStyle } = useScreenAnimation();
@@ -42,10 +45,10 @@ export default function NewPatientsScreen() {
   const [isAssessmentPressed, setIsAssessmentPressed] = useState(false);
   const [isAppointmentPressed, setIsAppointmentPressed] = useState(false);
   const logos = [
-    require("../assets/cigna.png"),
-    require("../assets/tricare.png"),
-    require("../assets/aetna.png"),
-    require("../assets/humana.png"),
+    require("../assets/logo1.png"),
+    require("../assets/logo2.png"),
+    require("../assets/logo3.png"),
+    require("../assets/logo4.png"),
 
     // Add more logos as needed
   ];
@@ -153,11 +156,23 @@ export default function NewPatientsScreen() {
     }
   };
 
+  const scrollToForms = () => {
+    if (formsRef.current && mainScrollRef.current) {
+      formsRef.current.measureLayout(
+        mainScrollRef.current._component || mainScrollRef.current,
+        (x, y) => {
+          mainScrollRef.current.scrollTo({ y: y - 20, animated: true });
+        },
+        () => {}
+      );
+    }
+  };
+
   return (
     <AppBar>
       <SafeAreaView style={styles.container}>
         <Animated.View style={[styles.animatedContainer, animatedStyle]}>
-          <ScrollView contentContainerStyle={scrollViewPadding}>
+          <ScrollView contentContainerStyle={scrollViewPadding} ref={mainScrollRef}>
           {/* Hero Section */}
           <View style={styles.heroSection}>
             <Image source={require("../assets/new-patient-hero.jpg")} style={styles.heroImage} />
@@ -165,13 +180,222 @@ export default function NewPatientsScreen() {
               <Text style={styles.heroTitle}>Start Your Journey With Us</Text>
             </View>
           </View>
+          {/* What to Expect Section */}
+          <View style={styles.stepsContainer}>
+            <Text style={styles.expectHeading}>Welcome to TMS therapy</Text>
+            
+            {/* Welcome Description */}
+            <View style={styles.welcomeTextContainer}>
+              <Text style={styles.welcomeText}>
+                We're glad you're considering TMS therapy. Here's everything you need to know to get started with your treatment journey.
+              </Text>
+              <Text style={styles.welcomeHeading}>
+                <Text style={styles.welcomeHeadingStart}>Start</Text>
+                <Text style={styles.welcomeHeadingRest}> Your Healing Journey</Text>
+              </Text>
+              <Text style={styles.welcomeText}>
+                We will guide you through every step of your TMS therapy process. Follow these three simple steps to begin your treatment:
+              </Text>
+            </View>
+
+            {/* Step 1 */}
+            <View style={styles.stepCard}>
+              <Image source={require("../assets/treatment.png")} style={styles.stepImage} resizeMode="cover" />
+              <View style={styles.stepContent}>
+                <View style={styles.stepHeader}>
+                  <View style={styles.stepNumberRow}>
+                    <Ionicons 
+                      name="checkmark-circle" 
+                      size={24} 
+                      color={Colors.primary} 
+                      style={styles.stepIcon} 
+                    />
+                    <Text style={styles.stepNumber}>Step 1:</Text>
+                  </View>
+                  <View style={styles.stepTitleContainer}>
+                    <Text style={styles.stepTitle}>Pre-Screen Consultation & Patient Intake Forms</Text>
+                  </View>
+                </View>
+                <Text style={styles.stepDescription}>
+                  Easily book and complete the necessary forms to start your treatment journey. Our Pre-Screen Consultation, BDI, PHQ-9, and Patient Intake forms are designed to gather essential information, ensuring personalized and effective care. Fill them out at your convenience, and we'll guide you through the next steps toward healing.
+                </Text>
+                <TouchableOpacity 
+                  style={[
+                    styles.stepButton,
+                    isExpectPressed && styles.stepButtonPressed
+                  ]}
+                  onPress={scrollToForms}
+                  onPressIn={() => setIsExpectPressed(true)}
+                  onPressOut={() => setIsExpectPressed(false)}
+                  activeOpacity={1}
+                >
+                  <Text style={[
+                    styles.stepButtonText,
+                    isExpectPressed && styles.stepButtonTextPressed
+                  ]}>
+                    ACCESS FORMS
+                  </Text>
+                  <Ionicons 
+                    name="arrow-forward" 
+                    size={18} 
+                    color={isExpectPressed ? Colors.white : Colors.white} 
+                    style={styles.stepButtonIcon} 
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Step 2 */}
+            <View style={styles.stepCard}>
+              <Image source={require("../assets/therapy.png")} style={styles.stepImage} resizeMode="cover" />
+              <View style={styles.stepContent}>
+                <View style={styles.stepHeader}>
+                  <View style={styles.stepNumberRow}>
+                    <Ionicons 
+                      name="checkmark-circle" 
+                      size={24} 
+                      color={Colors.primary} 
+                      style={styles.stepIcon} 
+                    />
+                    <Text style={styles.stepNumber}>Step 2:</Text>
+                  </View>
+                  <View style={styles.stepTitleContainer}>
+                    <Text style={styles.stepTitle}>Pre-Assessment</Text>
+                  </View>
+                </View>
+                <Text style={styles.stepSubheadingFirst}>Find Out If TMS Is Right For You</Text>
+                <Text style={styles.stepDescription}>
+                  Your Intake Coordinator will be the first person you speak with (whether in person or over the phone), and he or she will examine your history and explain various steps in the process.
+                </Text>
+                <Text style={styles.stepSubheading}>We Focus On Insurance So You Don't Have To.</Text>
+                <Text style={styles.stepDescription}>
+                  The majority of major insurance plans cover our procedures. Your Intake Coordinator will also clarify treatment cost choices, including reviewing typical insurance plan requirements with you.{'\n'}
+                  We will work with your health insurance provider to assess benefits.
+                </Text>
+                <TouchableOpacity 
+                  style={[
+                    styles.stepButton,
+                    isAssessmentPressed && styles.stepButtonPressed
+                  ]}
+                  onPress={() => router.push('/contact')}
+                  onPressIn={() => setIsAssessmentPressed(true)}
+                  onPressOut={() => setIsAssessmentPressed(false)}
+                  activeOpacity={1}
+                >
+                  <Text style={[
+                    styles.stepButtonText,
+                    isAssessmentPressed && styles.stepButtonTextPressed
+                  ]}>
+                    CONSULT NOW
+                  </Text>
+                  <Ionicons 
+                    name="arrow-forward" 
+                    size={18} 
+                    color={isAssessmentPressed ? Colors.white : Colors.white} 
+                    style={styles.stepButtonIcon} 
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Step 3 */}
+            <View style={styles.stepCard}>
+              <Image source={require("../assets/treatment-centre.png")} style={styles.stepImage} resizeMode="cover" />
+              <View style={styles.stepContent}>
+                <View style={styles.stepHeader}>
+                  <View style={styles.stepNumberRow}>
+                    <Ionicons 
+                      name="checkmark-circle" 
+                      size={24} 
+                      color={Colors.primary} 
+                      style={styles.stepIcon} 
+                    />
+                    <Text style={styles.stepNumber}>Step 3:</Text>
+                  </View>
+                  <View style={styles.stepTitleContainer}>
+                    <Text style={styles.stepTitle}>First Appointment</Text>
+                  </View>
+                </View>
+                <Text style={styles.stepSubheadingFirst}>A Treatment Specialized For You</Text>
+                <Text style={styles.stepDescription}>
+                  This appointment may require a little extra time, as the focus will be determining the appropriate magnet strength and coil position to ensure your treatment works effectively.
+                </Text>
+                <TouchableOpacity 
+                  style={[
+                    styles.stepButton,
+                    isAppointmentPressed && styles.stepButtonPressed
+                  ]}
+                  onPress={() => router.push('/contact')}
+                  onPressIn={() => setIsAppointmentPressed(true)}
+                  onPressOut={() => setIsAppointmentPressed(false)}
+                  activeOpacity={1}
+                >
+                  <Text style={[
+                    styles.stepButtonText,
+                    isAppointmentPressed && styles.stepButtonTextPressed
+                  ]}>
+                    CONSULT NOW
+                  </Text>
+                  <Ionicons 
+                    name="arrow-forward" 
+                    size={18} 
+                    color={isAppointmentPressed ? Colors.white : Colors.white} 
+                    style={styles.stepButtonIcon} 
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+          
+          {/* Forms Section */}
+          <View style={styles.formsSection} ref={formsRef}>
+            <View style={styles.formsHeaderContainer}>
+              <View style={styles.formsHeaderRow}>
+                <View style={styles.formsHeaderLine} />
+                <Text style={styles.formsHeading}>PATIENT FORMS</Text>
+                <View style={styles.formsHeaderLine} />
+              </View>
+              <Text style={styles.formsTitle}>Complete Your Required Forms</Text>
+            </View>
+            {[
+              { title: 'Pre Cert Med List', onPress: () => router.push('/pre-cert-med-list') },
+              { title: 'BDI', onPress: () => router.push('/bdi') },
+              { title: 'PHQ – 9', onPress: () => router.push('/phq-9') },
+              { title: 'Patient Intake Form', onPress: () => router.push('/patient-demographic-sheet') },
+              { title: 'Med History', onPress: () => router.push('/medical-history') },
+            ].map((item, idx) => (
+              <View style={styles.formCard} key={item.title}>
+                <Text style={styles.formCardTitle}>{item.title}</Text>
+                <TouchableOpacity 
+                  style={[
+                    styles.formCardButton,
+                    isFormCardPressed[idx] && styles.formCardButtonPressed
+                  ]} 
+                  onPress={item.onPress}
+                  onPressIn={() => setIsFormCardPressed(prev => ({ ...prev, [idx]: true }))}
+                  onPressOut={() => setIsFormCardPressed(prev => ({ ...prev, [idx]: false }))}
+                  activeOpacity={1}
+                >
+                  <Text style={[
+                    styles.formCardButtonText,
+                    isFormCardPressed[idx] && styles.formCardButtonTextPressed
+                  ]}>
+                    CLICK HERE
+                  </Text>
+                  <Ionicons 
+                    name="arrow-forward" 
+                    size={18} 
+                    color={isFormCardPressed[idx] ? Colors.white : Colors.white} 
+                    style={styles.formCardButtonIcon} 
+                  />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+
           {/* Coverage Section */}
           <View style={styles.coverageSection}>
             <Image source={require("../assets/insurance.png")} style={styles.coverageImage} resizeMode="cover" />
-            <View style={styles.coverageHeaderRow}>
-              <View style={styles.coverageHeaderLine} />
-              <Text style={styles.coverageHeading}>COVERAGE</Text>
-            </View>
             <Text style={styles.coverageTitle}><Text style={styles.coverageTitleBlue}>We Accept A Variety Of </Text><Text style={styles.coverageTitleBlack}>Insurance Plans</Text></Text>
             <Text style={styles.coverageDesc}>
               At TMS of Emerald Coast, we believe that everyone deserves access to high-quality mental health care. We accept a wide range of insurance plans to make sure that TMS therapy is affordable and accessible for you. Our team will assist in verifying your coverage to ensure a seamless experience throughout your treatment journey.
@@ -235,146 +459,7 @@ export default function NewPatientsScreen() {
               )}
             </View>
           </View>
-          {/* Forms Section */}
-          <View style={styles.formsSection}>
-            {[
-              { title: 'Pre Cert Med List', onPress: () => handleOpenDocument('pre-cert-med-list.pdf') },
-              { title: 'BDI', onPress: () => {} },
-              { title: 'PHQ – 9', onPress: () => handleOpenDocument('phq-9.pdf') },
-              { title: 'Patient Intake Form', onPress: () => handleOpenDocument('patient-intake.pdf') },
-            ].map((item, idx) => (
-              <View style={styles.formCard} key={item.title}>
-                <Text style={styles.formCardTitle}>{item.title}</Text>
-                <TouchableOpacity 
-                  style={[
-                    styles.formCardButton,
-                    isFormCardPressed[idx] && styles.formCardButtonPressed
-                  ]} 
-                  onPress={item.onPress}
-                  onPressIn={() => setIsFormCardPressed(prev => ({ ...prev, [idx]: true }))}
-                  onPressOut={() => setIsFormCardPressed(prev => ({ ...prev, [idx]: false }))}
-                  activeOpacity={1}
-                >
-                  <Text style={[
-                    styles.formCardButtonText,
-                    isFormCardPressed[idx] && styles.formCardButtonTextPressed
-                  ]}>
-                    CLICK HERE
-                  </Text>
-                  <Ionicons 
-                    name="arrow-forward" 
-                    size={18} 
-                    color={isFormCardPressed[idx] ? Colors.white : Colors.white} 
-                    style={styles.formCardButtonIcon} 
-                  />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-          {/* What to Expect Section */}
-          <View style={styles.expectSection}>
-            <Text style={styles.expectHeading}>What You Can Expect From</Text>
-            <Text style={styles.expectSubheading}>TMS Therapy</Text>
-            <Image source={require("../assets/treatment.png")} style={styles.expectImage} resizeMode="cover" />
-            <View style={styles.expectDividerRow}>
-              <View style={styles.expectDividerLine} />
-              <Text style={styles.expectDividerText}>FORM</Text>
-            </View>
-            <Text style={styles.expectStepTitle}><Text style={styles.expectStepTitleBlue}>1. Pre-Screen Consultation & </Text>Patient Intake Forms</Text>
-            <Text style={styles.expectDesc}>
-              Easily book and complete the necessary forms to start your treatment journey. Our Pre-Screen Consultation, BDI, PHQ-9, and Patient Intake forms are designed to gather essential information, ensuring personalized and effective care. Fill them out at your convenience, and we'll guide you through the next steps toward healing.
-            </Text>
-            <TouchableOpacity 
-              style={[
-                styles.expectButton,
-                isExpectPressed && styles.expectButtonPressed
-              ]}
-              onPressIn={() => setIsExpectPressed(true)}
-              onPressOut={() => setIsExpectPressed(false)}
-              activeOpacity={1}
-            >
-              <Text style={[
-                styles.expectButtonText,
-                isExpectPressed && styles.expectButtonTextPressed
-              ]}>
-                CONTACT
-              </Text>
-              <Ionicons 
-                name="arrow-forward" 
-                size={18} 
-                color={isExpectPressed ? Colors.white : Colors.white} 
-                style={styles.expectButtonIcon} 
-              />
-            </TouchableOpacity>
-          </View>
-          {/* Pre-Assessment Section */}
-          <View style={styles.assessmentSection}>
-            <Image source={require("../assets/body.png")} style={styles.assessmentImage} resizeMode="contain" />
-            <Text style={styles.assessmentStepTitle}>2. Pre-Assessment</Text>
-            <Text style={styles.assessmentSubheading}>Find Out If TMS Is Right For You</Text>
-            <Text style={styles.assessmentDesc}>
-              Your Intake Coordinator will be the first person you speak with (whether in person or over the phone), and he or she will examine your history and explain various steps in the process.
-            </Text>
-            <Text style={styles.assessmentSubheading2}>We Focus On Insurance So You Don't Have To.</Text>
-            <Text style={styles.assessmentDesc}>
-              The majority of major insurance plans cover our procedures. Your Intake Coordinator will also clarify treatment cost choices, including reviewing typical insurance plan requirements with you.
-              {'\n'}
-              We will work with your health insurance provider to assess benefits.
-            </Text>
-            <TouchableOpacity 
-              style={[
-                styles.assessmentButton,
-                isAssessmentPressed && styles.assessmentButtonPressed
-              ]}
-              onPressIn={() => setIsAssessmentPressed(true)}
-              onPressOut={() => setIsAssessmentPressed(false)}
-              activeOpacity={1}
-            >
-              <Text style={[
-                styles.assessmentButtonText,
-                isAssessmentPressed && styles.assessmentButtonTextPressed
-              ]}>
-                CONSULT NOW
-              </Text>
-              <Ionicons 
-                name="arrow-forward" 
-                size={18} 
-                color={isAssessmentPressed ? Colors.white : Colors.white} 
-                style={styles.assessmentButtonIcon} 
-              />
-            </TouchableOpacity>
-          </View>
-          {/* First Appointment Section */}
-          <View style={styles.appointmentSection}>
-            <Image source={require("../assets/treatment-centre.png")} style={styles.appointmentImage} resizeMode="cover" />
-            <Text style={styles.appointmentStepTitle}><Text style={styles.appointmentStepTitleBlue}>3. </Text>First Appointment</Text>
-            <Text style={styles.appointmentSubheading}>A Treatment Specialized For You</Text>
-            <Text style={styles.appointmentDesc}>
-              This appointment may require a little extra time, as the focus will be determining the appropriate magnet strength and coil position to ensure your treatment works effectively.
-            </Text>
-            <TouchableOpacity 
-              style={[
-                styles.appointmentButton,
-                isAppointmentPressed && styles.appointmentButtonPressed
-              ]}
-              onPressIn={() => setIsAppointmentPressed(true)}
-              onPressOut={() => setIsAppointmentPressed(false)}
-              activeOpacity={1}
-            >
-              <Text style={[
-                styles.appointmentButtonText,
-                isAppointmentPressed && styles.appointmentButtonTextPressed
-              ]}>
-                CONSULT NOW
-              </Text>
-              <Ionicons 
-                name="arrow-forward" 
-                size={18} 
-                color={isAppointmentPressed ? Colors.white : Colors.white} 
-                style={styles.appointmentButtonIcon} 
-              />
-            </TouchableOpacity>
-          </View>
+
           {/* Take Control Section */}
           <TakeControlSection />
 
@@ -446,8 +531,8 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: Colors.primary,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingVertical: Layout.spacing.regular,
+    paddingHorizontal: Layout.spacing.medium,
     borderRadius: Layout.borderRadius.medium,
     alignSelf: "center",
     marginTop: Layout.spacing.medium,
@@ -458,7 +543,7 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.regular,
   },
   heroSection: {
-    height: 220,
+    height: 180,
     position: "relative",
     marginBottom: Layout.spacing.large,
   },
@@ -492,9 +577,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     borderRadius: 0,
     marginHorizontal: 0,
-    marginTop: 50,
-    marginBottom: 50,
-    padding: 24,
+    marginTop: Spacing.HERO_TO_SECTION,
+    marginBottom: Spacing.SECTION_TO_SECTION,
+    padding: Layout.spacing.large,
+    paddingHorizontal: Layout.spacing.xlarge,
     alignItems: 'flex-start',
     shadowColor: Colors.black,
     shadowOpacity: 0.06,
@@ -504,7 +590,7 @@ const styles = StyleSheet.create({
   coverageHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.TEXT_SPACING,
   },
   coverageHeaderLine: {
     width: 36,
@@ -522,35 +608,38 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   coverageTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: Fonts.sizes.xlarge,
+    fontWeight: Fonts.weights.bold,
     textAlign: 'left',
-    marginBottom: 10,
+    marginBottom: Layout.spacing.small,
     marginTop: 0,
+    paddingHorizontal: Layout.spacing.small,
   },
   coverageTitleBlue: {
     color: Colors.primary,
-    fontWeight: '700',
+    fontWeight: Fonts.weights.bold,
   },
   coverageTitleBlack: {
     color: Colors.text,
-    fontWeight: '700',
+    fontWeight: Fonts.weights.bold,
   },
   coverageDesc: {
     color: Colors.text,
     fontSize: Fonts.sizes.regular,
     textAlign: 'left',
-    marginBottom: 18,
+    marginBottom: Layout.spacing.medium,
     marginTop: 0,
-    lineHeight: 20,
+    lineHeight: 24,
+    paddingHorizontal: Layout.spacing.small,
   },
   coverageButton: {
     backgroundColor: Colors.primary,
     borderRadius: Layout.borderRadius.medium,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
+    paddingVertical: Layout.spacing.medium,
+    paddingHorizontal: Layout.spacing.large,
     alignSelf: 'flex-start',
-    marginBottom: 18,
+    marginBottom: Layout.spacing.medium,
+    marginLeft: Layout.spacing.small,
   },
   coverageButtonText: {
     color: Colors.white,
@@ -566,18 +655,18 @@ const styles = StyleSheet.create({
   },
   coverageImage: {
     width: '100%',
-    height: 140,
-    borderRadius: 0,
+    height: 180,
+    borderRadius: Layout.borderRadius.large,
     marginTop: 0,
-    marginBottom: 18,
+    marginBottom: Layout.spacing.medium,
   },
   logoCarouselSection: {
     backgroundColor: Colors.primary,
     borderRadius: 0,
     marginHorizontal: 0,
     marginTop: 0,
-    marginBottom: 50,
-    paddingVertical: 32,
+    marginBottom: Spacing.SECTION_TO_SECTION,
+    paddingVertical: Layout.spacing.xxlarge,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -591,13 +680,13 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 260,
     height: 80,
-    marginHorizontal: 16,
+    marginHorizontal: Layout.spacing.medium,
   },
   logoDotsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 18,
+    marginTop: Layout.spacing.medium,
   },
   logoDot: {
     width: 8,
@@ -609,62 +698,15 @@ const styles = StyleSheet.create({
   logoDotActive: {
     backgroundColor: Colors.white,
   },
-  formsSection: {
-    marginTop: 50,
-    marginBottom: 50,
-    paddingHorizontal: 24,
-  },
-  formCard: {
-    backgroundColor: '#dbe5e7',
-    borderRadius: 16,
-    alignItems: 'center',
-    paddingVertical: 32,
-    paddingHorizontal: 8,
-    marginBottom: 20,
-    shadowColor: Colors.black,
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  formCardTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.text,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  formCardButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: Layout.borderRadius.medium,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'center',
-  },
-  formCardButtonText: {
-    color: Colors.white,
-    fontWeight: Fonts.weights.bold,
-    fontSize: 15,
-    marginRight: 8,
-    letterSpacing: 1,
-  },
-  formCardButtonIcon: {
-    marginLeft: 0,
-  },
-  formCardButtonPressed: {
-    backgroundColor: Colors.secondary,
-  },
-  formCardButtonTextPressed: {
-    color: Colors.white,
-  },
-  expectSection: {
-    backgroundColor: Colors.background,
+  stepsContainer: {
+    backgroundColor: '#f8f9fa',
     borderRadius: 0,
     marginHorizontal: 0,
-    marginTop: 50,
-    marginBottom: 50,
-    padding: 24,
+    marginTop: 0,
+    marginBottom: Spacing.SECTION_TO_SECTION,
+    paddingTop: Layout.spacing.large,
+    paddingBottom: Layout.spacing.large,
+    paddingHorizontal: Layout.spacing.large,
     alignItems: 'flex-start',
     shadowColor: Colors.black,
     shadowOpacity: 0.06,
@@ -673,252 +715,304 @@ const styles = StyleSheet.create({
   },
   expectHeading: {
     color: Colors.primary,
-    fontSize: 22,
-    fontWeight: '700',
-    textAlign: 'center',
-    alignSelf: 'center',
-    marginBottom: 8,
+    fontSize: Fonts.sizes.xlarge,
+    fontWeight: Fonts.weights.bold,
+    textAlign: 'left',
+    alignSelf: 'flex-start',
+    marginBottom: Spacing.TEXT_SPACING,
+    marginLeft: 0,
+    paddingHorizontal: Layout.spacing.medium,
   },
   expectSubheading: {
     color: Colors.text,
-    fontSize: 22,
-    fontWeight: '700',
-    textAlign: 'center',
-    alignSelf: 'center',
-    marginBottom: 24,
+    fontSize: Fonts.sizes.xlarge,
+    fontWeight: Fonts.weights.bold,
+    textAlign: 'left',
+    alignSelf: 'flex-start',
+    marginBottom: Layout.spacing.large,
     marginTop: 0,
+    marginLeft: 0,
+    paddingHorizontal: Layout.spacing.medium,
   },
-  expectImage: {
-    width: '100%',
-    height: 160,
-    borderRadius: 18,
-    marginBottom: 18,
-    marginTop: 0,
-  },
-  expectDividerRow: {
+  progressIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-    marginTop: 0,
+    marginBottom: Layout.spacing.large,
+    marginHorizontal: 0,
+    paddingHorizontal: Layout.spacing.medium,
+    width: 'auto',
+    justifyContent: 'center',
   },
-  expectDividerLine: {
-    width: '33%',
+  progressStep: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginHorizontal: Spacing.TEXT_SPACING,
+  },
+  progressStepActive: {
+    backgroundColor: Colors.primary,
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressStepNumber: {
+    color: Colors.white,
+    fontWeight: Fonts.weights.bold,
+    fontSize: Fonts.sizes.regular,
+  },
+  progressStepLabel: {
+    color: Colors.text,
+    fontSize: Fonts.sizes.regular,
+    marginTop: 8,
+  },
+  progressLine: {
+    flex: 1,
     height: 2,
     backgroundColor: Colors.primary,
-    opacity: 0.6,
-    marginRight: 8,
-    borderRadius: 1,
+    opacity: 0.4,
   },
-  expectDividerText: {
+  stepCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 0,
+    marginHorizontal: 0,
+    marginBottom: 24,
+    paddingTop: 20,
+    shadowColor: Colors.black,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  stepContent: {
+    padding: Layout.spacing.large,
+    paddingHorizontal: Layout.spacing.xlarge,
+    alignItems: 'flex-start',
+    width: '100%',
+  },
+  stepHeader: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    marginBottom: Layout.spacing.medium,
+    width: '100%',
+  },
+  stepNumberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.TEXT_SPACING,
+  },
+  stepIcon: {
+    marginRight: 8,
+  },
+  stepNumber: {
     color: Colors.primary,
-    fontWeight: Fonts.weights.regular,
+    fontWeight: Fonts.weights.bold,
+    fontSize: Fonts.sizes.xlarge,
+    marginBottom: 0,
+  },
+  stepTitleContainer: {
+    flex: 1,
+    flexShrink: 1,
+  },
+  stepTitle: {
+    color: Colors.text,
+    fontWeight: Fonts.weights.bold,
+    fontSize: Fonts.sizes.xlarge,
+    marginBottom: Spacing.FORM_INTERNAL,
+    textAlign: 'left',
+    flexWrap: 'wrap',
+  },
+  stepSubheading: {
+    color: Colors.primary,
+    fontSize: Fonts.sizes.regular,
+    fontWeight: Fonts.weights.bold,
+    marginBottom: Spacing.TEXT_SPACING,
+    marginTop: Layout.spacing.medium,
+    textAlign: 'left',
+    width: '100%',
+  },
+  stepSubheadingFirst: {
+    color: Colors.primary,
+    fontSize: Fonts.sizes.regular,
+    fontWeight: Fonts.weights.bold,
+    marginBottom: Spacing.TEXT_SPACING,
+    marginTop: Spacing.TEXT_SPACING,
+    textAlign: 'left',
+    width: '100%',
+  },
+  stepImage: {
+    width: '90%',
+    height: 160,
+    borderRadius: Layout.borderRadius.large,
+    alignSelf: 'center',
+    marginHorizontal: Layout.spacing.medium,
+  },
+  stepImageContain: {
+    width: '90%',
+    height: 160,
+    borderRadius: Layout.borderRadius.large,
+    backgroundColor: '#f5f5f5',
+    alignSelf: 'center',
+    marginHorizontal: Layout.spacing.medium,
+  },
+  stepDescription: {
+    color: Colors.text,
+    fontSize: Fonts.sizes.regular,
+    textAlign: 'left',
+    marginBottom: Layout.spacing.medium,
+    marginTop: 0,
+    lineHeight: 24,
+    width: '100%',
+  },
+  stepButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: Layout.borderRadius.medium,
+    paddingVertical: Layout.spacing.medium,
+    paddingHorizontal: Layout.spacing.large,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.TEXT_SPACING,
+  },
+  stepButtonText: {
+    color: Colors.white,
+    fontWeight: Fonts.weights.bold,
+    fontSize: Fonts.sizes.regular,
+    letterSpacing: 1,
+    marginRight: 8,
+  },
+  stepButtonIcon: {
+    marginLeft: 0,
+  },
+  stepButtonPressed: {
+    backgroundColor: Colors.secondary,
+  },
+  stepButtonTextPressed: {
+    color: Colors.white,
+  },
+  formsSection: {
+    marginTop: 0,
+    marginBottom: Spacing.SECTION_TO_SECTION,
+    paddingHorizontal: Layout.spacing.xlarge,
+  },
+  formsHeaderContainer: {
+    alignItems: 'center',
+    marginBottom: Layout.spacing.large,
+    paddingHorizontal: Layout.spacing.medium,
+  },
+  formsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  formsHeaderLine: {
+    flex: 1,
+    height: 2,
+    backgroundColor: Colors.primary,
+    opacity: 0.4,
+  },
+  formsHeading: {
+    color: Colors.primary,
+    fontSize: Fonts.sizes.xlarge,
+    fontWeight: Fonts.weights.bold,
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginHorizontal: Layout.spacing.medium,
+  },
+  formsTitle: {
+    color: Colors.text,
+    fontSize: Fonts.sizes.xlarge,
+    fontWeight: Fonts.weights.bold,
+    textAlign: 'center',
+    alignSelf: 'center',
+  },
+  formCard: {
+    backgroundColor: '#dbe5e7',
+    borderRadius: Layout.borderRadius.large,
+    alignItems: 'center',
+    paddingVertical: Layout.spacing.xxlarge,
+    paddingHorizontal: Layout.spacing.xlarge,
+    marginBottom: Layout.spacing.medium,
+    shadowColor: Colors.black,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  formCardTitle: {
+    fontSize: Fonts.sizes.xlarge,
+    fontWeight: Fonts.weights.bold,
+    color: Colors.text,
+    marginBottom: Layout.spacing.large,
+    textAlign: 'center',
+    paddingHorizontal: Layout.spacing.medium,
+  },
+  formCardButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: Layout.borderRadius.medium,
+    paddingVertical: Layout.spacing.medium,
+    paddingHorizontal: Layout.spacing.large,
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+  },
+  formCardButtonText: {
+    color: Colors.white,
+    fontWeight: Fonts.weights.bold,
+    fontSize: Fonts.sizes.regular,
+    marginRight: 8,
+    letterSpacing: 1,
+  },
+  formCardButtonPressed: {
+    backgroundColor: Colors.secondary,
+  },
+  formCardButtonTextPressed: {
+    color: Colors.white,
+  },
+  formCardButtonIcon: {
+    marginLeft: 0,
+  },
+  welcomeTextContainer: {
+    marginHorizontal: Layout.spacing.xlarge,
+    marginBottom: Layout.spacing.xxlarge,
+    alignItems: 'flex-start',
+    paddingHorizontal: Layout.spacing.medium,
+  },
+  welcomeText: {
+    color: Colors.text,
+    fontSize: Fonts.sizes.regular,
+    lineHeight: 24,
+    textAlign: 'left',
+    marginBottom: Layout.spacing.medium,
+    paddingHorizontal: Layout.spacing.small,
+  },
+  welcomeHeading: {
+    textAlign: 'left',
+    marginBottom: Layout.spacing.small,
+    marginTop: Layout.spacing.medium,
+    paddingHorizontal: Layout.spacing.small,
+  },
+  welcomeHeadingStart: {
+    color: Colors.black,
     fontSize: Fonts.sizes.large,
-    letterSpacing: 1,
-    textAlign: 'left',
-  },
-  expectStepTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 10,
-    marginTop: 0,
-    textAlign: 'left',
-  },
-  expectStepTitleBlue: {
-    color: Colors.primary,
-    fontWeight: '700',
-  },
-  expectDesc: {
-    color: Colors.text,
-    fontSize: Fonts.sizes.regular,
-    textAlign: 'left',
-    marginBottom: 18,
-    marginTop: 0,
-    lineHeight: 20,
-  },
-  expectButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: Layout.borderRadius.medium,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 0,
-  },
-  expectButtonText: {
-    color: Colors.white,
     fontWeight: Fonts.weights.bold,
-    fontSize: Fonts.sizes.regular,
-    letterSpacing: 1,
-    marginRight: 8,
   },
-  expectButtonIcon: {
-    marginLeft: 0,
+  welcomeHeadingRest: {
+    color: Colors.black,
+    fontSize: Fonts.sizes.large,
+    fontWeight: Fonts.weights.bold,
   },
-  expectButtonPressed: {
-    backgroundColor: Colors.secondary,
-  },
-  expectButtonTextPressed: {
-    color: Colors.white,
-  },
-  assessmentSection: {
-    backgroundColor: '#eaf4f3',
-    borderRadius: 0,
-    marginHorizontal: 0,
-    marginTop: 50,
-    marginBottom: 50,
-    padding: 24,
-    alignItems: 'flex-start',
-    shadowColor: Colors.black,
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  assessmentImage: {
-    width: '100%',
-    height: 220,
-    borderRadius: 12,
-    marginBottom: 18,
+  treatmentImage: {
+    width: '90%',
+    height: 190,
+    borderRadius: Layout.borderRadius.large,
+    marginHorizontal: Layout.spacing.xxlarge,
+    marginBottom: Layout.spacing.large,
     marginTop: 0,
     alignSelf: 'center',
   },
-  assessmentStepTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: Colors.text,
-    marginBottom: 10,
-    marginTop: 0,
-    textAlign: 'left',
-  },
-  assessmentSubheading: {
-    color: Colors.primary,
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 8,
-    marginTop: 0,
-    textAlign: 'left',
-  },
-  assessmentSubheading2: {
-    color: Colors.primary,
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 8,
-    marginTop: 16,
-    textAlign: 'left',
-  },
-  assessmentDesc: {
-    color: Colors.text,
-    fontSize: Fonts.sizes.regular,
-    textAlign: 'left',
-    marginBottom: 8,
-    marginTop: 0,
-    lineHeight: 20,
-  },
-  assessmentButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: Layout.borderRadius.medium,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  assessmentButtonText: {
-    color: Colors.white,
-    fontWeight: Fonts.weights.bold,
-    fontSize: Fonts.sizes.regular,
-    letterSpacing: 1,
-    marginRight: 8,
-  },
-  assessmentButtonIcon: {
-    marginLeft: 0,
-  },
-  assessmentButtonPressed: {
-    backgroundColor: Colors.secondary,
-  },
-  assessmentButtonTextPressed: {
-    color: Colors.white,
-  },
-  appointmentSection: {
-    backgroundColor: Colors.background,
-    borderRadius: 0,
-    marginHorizontal: 0,
-    marginTop: 50,
-    marginBottom: 50,
-    padding: 24,
-    alignItems: 'flex-start',
-    shadowColor: Colors.black,
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  appointmentStepTitle: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: Colors.text,
-    marginBottom: 8,
-    marginTop: 0,
-    textAlign: 'left',
-    alignSelf: 'flex-start',
-  },
-  appointmentStepTitleBlue: {
-    color: Colors.primary,
-    fontWeight: 'bold',
-  },
-  appointmentSubheading: {
-    color: Colors.primary,
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 12,
-    marginTop: 0,
-    textAlign: 'left',
-    alignSelf: 'flex-start',
-  },
-  appointmentDesc: {
-    color: Colors.text,
-    fontSize: Fonts.sizes.regular,
-    textAlign: 'left',
-    marginBottom: 18,
-    marginTop: 0,
-    lineHeight: 20,
-    alignSelf: 'flex-start',
-  },
-  appointmentImage: {
-    width: '100%',
-    height: 220,
-    borderRadius: 0,
-    marginBottom: 18,
-    marginTop: 0,
-    alignSelf: 'center',
-  },
-  appointmentButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: Layout.borderRadius.medium,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    marginTop: 0,
-  },
-  appointmentButtonText: {
-    color: Colors.white,
-    fontWeight: Fonts.weights.bold,
-    fontSize: Fonts.sizes.regular,
-    letterSpacing: 1,
-    marginRight: 8,
-  },
-  appointmentButtonIcon: {
-    marginLeft: 0,
-  },
-  appointmentButtonPressed: {
-    backgroundColor: Colors.secondary,
-  },
-  appointmentButtonTextPressed: {
-    color: Colors.white,
-  },
-
-
 });
+
+
+

@@ -26,6 +26,8 @@ import OptimizedImage from "../src/components/OptimizedImage";
 import FAQSection from "../src/components/FAQSection";
 import FloatingActionButton from "../src/components/FloatingActionButton";
 import ModernDatePicker from "../src/components/ModernDatePicker";
+import SimpleVideoModal from "../src/components/SimpleVideoModal"; // Simplest and most reliable
+import SubmitButton from "../src/components/SubmitButton";
 
 // Import context
 import { useScrollViewPadding } from "../src/context/BottomNavContext";
@@ -38,10 +40,10 @@ import { useFormReducer } from "../src/hooks/useFormReducer";
 import Colors from "../src/constants/Colors";
 import Fonts from "../src/constants/Fonts";
 import Layout from "../src/constants/Layout";
+import Spacing from "../src/constants/Spacing";
 
 // Import utils
 import { validateEmail } from "../src/utils/validation";
-import { preloadCriticalImages } from "../src/utils/imageCache";
 
 /**
  * Home Screen Component - Enhanced with better UX and performance
@@ -52,14 +54,28 @@ export default function HomeScreen() {
   const { window: dimensions, isTablet, isMobile, isSmallDevice } = useResponsiveDimensions();
   
   // Loading and refresh states
-  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Animation values
-  const fadeAnim = useState(new Animated.Value(0))[0];
-  const slideAnim = useState(new Animated.Value(50))[0];
+  // Video modal state
+  const [isVideoModalVisible, setIsVideoModalVisible] = useState(false);
   
+  // Animation values for smooth transitions (optional)
+  const fadeAnim = useState(new Animated.Value(1))[0]; // Start with 1 (visible)
+  const slideAnim = useState(new Animated.Value(0))[0]; // Start with 0 (in position)
+  
+  // Optional: Add subtle entrance animation on mount
+  useEffect(() => {
+    // Only animate if desired - content is immediately available
+    if (fadeAnim._value !== 1) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [fadeAnim]);
+
   // Use form reducer for better state management
   const {
     fields,
@@ -125,45 +141,13 @@ export default function HomeScreen() {
     },
   ], []);
 
-  // Enhanced initialization with loading states
-  useEffect(() => {
-    const initializeScreen = async () => {
-      try {
-        setIsLoading(true);
-        await preloadCriticalImages();
-        
-        // Animate content in
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 600,
-            useNativeDriver: true,
-          }),
-        ]).start();
-        
-      } catch (error) {
-        console.error('Error initializing HomeScreen:', error);
-        Alert.alert('Error', 'Failed to load some content. Please try refreshing.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeScreen();
-  }, [fadeAnim, slideAnim]);
-
-  // Enhanced refresh functionality
+  // Optimized refresh functionality
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await preloadCriticalImages();
       // Reset form if needed
       clearAllErrors();
+      // Remove image preloading delay for faster refresh
     } catch (error) {
       console.error('Error refreshing:', error);
       Alert.alert('Error', 'Failed to refresh content.');
@@ -311,28 +295,8 @@ export default function HomeScreen() {
   }, [router]);
 
   const handleWatchVideo = useCallback(() => {
-    // TODO: Implement video modal or navigation
-    Alert.alert(
-      "Coming Soon",
-      "Video content will be available soon. Contact us for more information!",
-      [
-        { text: "Contact Us", onPress: () => router.push("/contact") },
-        { text: "OK", style: "cancel" }
-      ]
-    );
-  }, [router]);
-
-  // Show loading screen
-  if (isLoading) {
-    return (
-      <AppBar>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      </AppBar>
-    );
-  }
+    setIsVideoModalVisible(true);
+  }, []);
 
   return (
     <AppBar>
@@ -361,7 +325,7 @@ export default function HomeScreen() {
           >
             {/* Hero Section */}
             <HeroImage 
-              source={require("../assets/hero-background.jpeg")}
+              source={require("../assets/home-hero.jpeg")}
               height={isMobile ? dimensions.height * 0.6 : isTablet ? 500 : 600}
               priority={true}
             >
@@ -547,35 +511,17 @@ export default function HomeScreen() {
                 </View>
               ) : null}
               
-              <TouchableOpacity 
-                style={[
-                  styles.heroFormButton,
-                  pressedStates.contactForm && styles.heroFormButtonPressed,
-                  isSubmitting && styles.heroFormButtonDisabled
-                ]} 
+              <SubmitButton
                 onPress={handleContactSubmit}
                 onPressIn={() => setPressedState("contactForm", true)}
                 onPressOut={() => setPressedState("contactForm", false)}
-                activeOpacity={0.7}
+                isPressed={pressedStates.contactForm}
+                isSubmitting={isSubmitting}
                 disabled={isSubmitting}
-                accessibilityRole="button"
-                accessibilityLabel="Submit Contact Form"
-                accessibilityState={{ disabled: isSubmitting }}
-              >
-                {isSubmitting ? (
-                  <View style={styles.submitButtonContent}>
-                    <ActivityIndicator size="small" color={Colors.white} style={{ marginRight: 8 }} />
-                    <Text style={styles.heroFormButtonText}>SUBMITTING...</Text>
-                  </View>
-                ) : (
-                  <Text style={[
-                    styles.heroFormButtonText,
-                    pressedStates.contactForm && styles.heroFormButtonTextPressed
-                  ]}>
-                    CONTACT US
-                  </Text>
-                                 )}
-               </TouchableOpacity>
+                title="CONTACT US"
+                icon="arrow-forward"
+                style={styles.heroFormButtonOverride}
+              />
              </Pressable>
               </ImageBackground>
             </View>
@@ -586,8 +532,8 @@ export default function HomeScreen() {
                 source={require("../assets/patient-image.png")} 
                 style={styles.tmsInfoImage} 
                 resizeMode="cover"
-                lazy={true}
-                priority={false}
+                lazy={false}
+                priority={true}
                 accessibilityLabel="Patient receiving TMS therapy treatment"
               />
               <Text 
@@ -597,12 +543,18 @@ export default function HomeScreen() {
               >
                 Be Part Of The 4 In 5 Patients Experiencing Relief With TMS.
               </Text>
-              <Text style={styles.tmsInfoSubheading}>Embracing the healing power of magnetic fields</Text>
+              <View style={styles.tmsInfoSubheadingRow}>
+                <View style={styles.tmsInfoBullet} />
+                <Text style={styles.tmsInfoSubheading}>Embracing the healing power of magnetic fields</Text>
+              </View>
               <Text style={styles.tmsInfoText}>
                 Transcranial Magnetic Stimulation (TMS) is a non-invasive procedure that uses magnetic fields to stimulate nerve cells in the brain. This innovative treatment has emerged as a promising solution for individuals struggling with various mental health conditions, particularly depression.
               </Text>
+              <View style={styles.tmsInfoSubheadingRow2}>
+                <View style={styles.tmsInfoBullet} />
+                <Text style={styles.tmsInfoSubheading2}>How Does it Work?</Text>
+              </View>
               <Text style={styles.tmsInfoText2}>
-                <Text style={styles.tmsInfoSubheading2}>How Does it Work?</Text>{'\n'}
                 TMS therapy works by using magnetic pulses to gently stimulate specific areas of the brain involved in mood regulation. These pulses help activate brain cells, which can improve symptoms of depression and other mental health conditions. The procedure is non-invasive, painless, and does not require medication.
               </Text>
               <View style={styles.tmsInfoButtonRow}>
@@ -627,7 +579,7 @@ export default function HomeScreen() {
                   <Ionicons 
                     name="arrow-forward" 
                     size={18} 
-                    color={pressedStates.learnMore ? Colors.white : Colors.primary} 
+                    color={pressedStates.learnMore ? Colors.white : Colors.white} 
                     style={styles.tmsInfoButtonIcon} 
                   />
                 </TouchableOpacity>
@@ -638,12 +590,12 @@ export default function HomeScreen() {
             <View style={styles.militaryCardSection}>
               <View style={styles.militaryCard}>
                 <OptimizedImage 
-                  source={require("../assets/tms-treatment.jpg")} 
+                  source={require("../assets/treatment-hero.png")} 
                   style={styles.militaryCardImage} 
                   resizeMode="cover"
-                  lazy={true}
-                  priority={false}
-                  accessibilityLabel="TMS treatment equipment and facility"
+                  lazy={false}
+                  priority={true}
+                  accessibilityLabel="TMS treatment video thumbnail"
                 />
                 <Text 
                   style={styles.militaryCardHeading}
@@ -665,27 +617,42 @@ export default function HomeScreen() {
                 How TMS Helps Military Personnel
               </Text>
               
-              <Text style={styles.militarySectionSubheading}>PTSD Treatment</Text>
+              <View style={styles.militarySubheadingRow}>
+                <View style={styles.militaryBullet} />
+                <Text style={styles.militarySectionSubheading}>PTSD Treatment</Text>
+              </View>
               <Text style={styles.militarySectionText}>
                 TMS targets areas of the brain linked to emotional regulation and fear response, helping reduce PTSD symptoms such as flashbacks, hypervigilance, and mood instability.
               </Text>
               
-              <Text style={styles.militarySectionSubheading}>Depression Relief</Text>
+              <View style={styles.militarySubheadingRow}>
+                <View style={styles.militaryBullet} />
+                <Text style={styles.militarySectionSubheading}>Depression Relief</Text>
+              </View>
               <Text style={styles.militarySectionText}>
                 Many military members experience treatment-resistant depression. TMS is an FDA-approved, non-invasive option that has shown effectiveness when traditional therapies fail.
               </Text>
               
-              <Text style={styles.militarySectionSubheading}>Traumatic Brain Injury (TBI) Support</Text>
+              <View style={styles.militarySubheadingRow}>
+                <View style={styles.militaryBullet} />
+                <Text style={styles.militarySectionSubheading}>Traumatic Brain Injury (TBI) Support</Text>
+              </View>
               <Text style={styles.militarySectionText}>
                 Some research suggests TMS may help with cognitive function and mood regulation in those who have suffered mild TBI.
               </Text>
               
-              <Text style={styles.militarySectionSubheading}>Anxiety & Insomnia</Text>
+              <View style={styles.militarySubheadingRow}>
+                <View style={styles.militaryBullet} />
+                <Text style={styles.militarySectionSubheading}>Anxiety & Insomnia</Text>
+              </View>
               <Text style={styles.militarySectionText}>
                 TMS can regulate brain activity associated with anxiety disorders and sleep disturbances.
               </Text>
               
-              <Text style={styles.militarySectionSubheading}>Non-Medicated Solution</Text>
+              <View style={styles.militarySubheadingRow}>
+                <View style={styles.militaryBullet} />
+                <Text style={styles.militarySectionSubheading}>Non-Medicated Solution</Text>
+              </View>
               <Text style={styles.militarySectionText}>
                 Many military personnel prefer non-drug treatments to avoid side effects and dependency issues associated with medications.
               </Text>
@@ -698,10 +665,22 @@ export default function HomeScreen() {
                 Why Military Personnel Benefit From TMS
               </Text>
               <View style={styles.militarySectionList}>
-                <Text style={styles.militarySectionListItem}>• Non-invasive & drug-free</Text>
-                <Text style={styles.militarySectionListItem}>• Minimal side effects (usually mild headaches or scalp discomfort)</Text>
-                <Text style={styles.militarySectionListItem}>• Quick sessions (typically 20-40 minutes per session, 5 days a week for 4-6 weeks)</Text>
-                <Text style={styles.militarySectionListItem}>• Long-term effect: Studies suggest benefits last for months after treatment.</Text>
+                <View style={styles.militaryListItemRow}>
+                  <View style={styles.militaryListBullet} />
+                  <Text style={styles.militarySectionListItem}>Non-invasive & drug-free</Text>
+                </View>
+                <View style={styles.militaryListItemRow}>
+                  <View style={styles.militaryListBullet} />
+                  <Text style={styles.militarySectionListItem}>Minimal side effects (usually mild headaches or scalp discomfort)</Text>
+                </View>
+                <View style={styles.militaryListItemRow}>
+                  <View style={styles.militaryListBullet} />
+                  <Text style={styles.militarySectionListItem}>Quick sessions (typically 20-40 minutes per session, 5 days a week for 4-6 weeks)</Text>
+                </View>
+                <View style={styles.militaryListItemRow}>
+                  <View style={styles.militaryListBullet} />
+                  <Text style={styles.militarySectionListItem}>Long-term effect: Studies suggest benefits last for months after treatment.</Text>
+                </View>
               </View>
 
               <Text 
@@ -712,9 +691,18 @@ export default function HomeScreen() {
                 Availability & Military Coverage
               </Text>
               <View style={styles.militarySectionList}>
-                <Text style={styles.militarySectionListItem}>• The U.S. Department of Veterans Affairs (VA) has been integrating TMS into PTSD and depression treatment programs.</Text>
-                <Text style={styles.militarySectionListItem}>• TRICARE (military health insurance) and the VA may cover TMS therapy for qualifying service members and veterans.</Text>
-                <Text style={styles.militarySectionListItem}>• Some private clinics also offer TMS specifically for veterans.</Text>
+                <View style={styles.militaryListItemRow}>
+                  <View style={styles.militaryListBullet} />
+                  <Text style={styles.militarySectionListItem}>The U.S. Department of Veterans Affairs (VA) has been integrating TMS into PTSD and depression treatment programs.</Text>
+                </View>
+                <View style={styles.militaryListItemRow}>
+                  <View style={styles.militaryListBullet} />
+                  <Text style={styles.militarySectionListItem}>TRICARE (military health insurance) and the VA may cover TMS therapy for qualifying service members and veterans.</Text>
+                </View>
+                <View style={styles.militaryListItemRow}>
+                  <View style={styles.militaryListBullet} />
+                  <Text style={styles.militarySectionListItem}>Some private clinics also offer TMS specifically for veterans.</Text>
+                </View>
               </View>
                          </View>
 
@@ -731,6 +719,14 @@ export default function HomeScreen() {
          
          {/* Floating Action Button */}
          <FloatingActionButton />
+         
+         {/* Video Modal */}
+         <SimpleVideoModal
+           visible={isVideoModalVisible}
+           onClose={() => setIsVideoModalVisible(false)}
+           videoUri="https://tmsofemeraldcoast.com/wp-content/uploads/2025/05/TMSMilitaryNew.m4v"
+           title="TMS Military Treatment Information"
+         />
        </View>
      </AppBar>
    );
@@ -747,19 +743,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: Fonts.sizes.medium,
-    color: Colors.primary,
-    fontWeight: Fonts.weights.medium,
-  },
-
   heroOverlay: {
     backgroundColor: Colors.heroOverlay,
     position: "absolute",
@@ -818,15 +801,15 @@ const styles = StyleSheet.create({
   },
   contactButton: {
     backgroundColor: Colors.secondary,
-    paddingVertical: 9,
-    paddingHorizontal: 16,
+    paddingVertical: Layout.spacing.medium,
+    paddingHorizontal: Layout.spacing.large,
     borderRadius: Layout.borderRadius.medium,
     alignSelf: 'flex-start',
     marginRight: 12,
   },
   contactButtonText: {
     color: Colors.white,
-    fontSize: Fonts.sizes.medium,
+    fontSize: Fonts.sizes.regular,
     fontWeight: Fonts.weights.bold,
   },
   videoButton: {
@@ -834,8 +817,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.white,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: Layout.spacing.medium,
+    paddingHorizontal: Layout.spacing.large,
     borderRadius: Layout.borderRadius.medium,
     backgroundColor: Colors.transparent,
   },
@@ -844,13 +827,13 @@ const styles = StyleSheet.create({
   },
   videoButtonText: {
     color: Colors.white,
-    fontSize: Fonts.sizes.medium,
+    fontSize: Fonts.sizes.regular,
     fontWeight: Fonts.weights.bold,
   },
   heroFormWrapper: {
     marginHorizontal: 0,
-    marginTop: 32,
-    marginBottom: 50,
+    marginTop: Spacing.HERO_TO_SECTION, // 32px from hero
+    marginBottom: Spacing.SECTION_TO_SECTION, // 50px to next section
     borderRadius: 0,
     overflow: 'hidden',
     shadowColor: Colors.black,
@@ -873,19 +856,20 @@ const styles = StyleSheet.create({
   },
   heroFormTitle: {
     color: Colors.white,
-    fontSize: 15.5,
+    fontSize: Fonts.sizes.large,
     fontWeight: Fonts.weights.bold,
-    textAlign: 'left',
-    marginBottom: 18,
+    textAlign: 'center',
+    marginBottom: Layout.spacing.medium,
     width: '100%',
     flexShrink: 1,
+    lineHeight: 26,
   },
   heroFormTitleSecond: {
     color: Colors.white,
-    fontSize: 15.5,
+    fontSize: Fonts.sizes.regular,
     fontWeight: Fonts.weights.bold,
     textAlign: 'left',
-    marginBottom: 18,
+    marginBottom: Layout.spacing.medium,
     marginTop: 0,
   },
   heroFormInput: {
@@ -936,28 +920,10 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.medium,
     color: '#222',
   },
-  heroFormButton: {
+  heroFormButtonOverride: {
     backgroundColor: Colors.secondary,
-    borderRadius: Layout.borderRadius.medium,
-    paddingVertical: 16,
-    alignItems: 'center',
     marginTop: 20,
-  },
-  heroFormButtonText: {
-    color: Colors.white,
-    fontSize: Fonts.sizes.medium,
-    fontWeight: Fonts.weights.bold,
-    letterSpacing: 1,
-  },
-  heroFormButtonPressed: {
-    backgroundColor: Colors.secondary,
-  },
-  heroFormButtonTextPressed: {
-    color: Colors.white,
-  },
-  heroFormButtonDisabled: {
-    backgroundColor: Colors.darkGray,
-    opacity: 0.7,
+    marginBottom: 0,
   },
   heroFormErrorContainer: {
     flexDirection: 'row',
@@ -970,51 +936,58 @@ const styles = StyleSheet.create({
   },
   heroFormError: {
     color: Colors.error,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: Fonts.sizes.small,
+    fontWeight: Fonts.weights.medium,
     flex: 1,
   },
-  submitButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  heroFormErrorText: {
+    color: Colors.error,
+    fontSize: Fonts.sizes.small,
+    fontWeight: Fonts.weights.medium,
+    flex: 1,
   },
   tmsInfoSection: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#e8f4f8',
     borderRadius: 0,
     padding: 24,
     marginHorizontal: 0,
-    marginBottom: 50,
+    marginBottom: Spacing.SECTION_TO_SECTION,
   },
   tmsInfoHeading: {
-    color: Colors.white,
-    fontSize: Fonts.sizes.large,
+    color: Colors.primary,
+    fontSize: Fonts.sizes.xlarge,
     fontWeight: Fonts.weights.bold,
-    marginBottom: 10,
+    marginBottom: Layout.spacing.small,
     textAlign: 'left',
+  },
+  tmsInfoSubheadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  tmsInfoBullet: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.primary,
+    marginRight: 8,
+    marginTop: 2,
   },
   tmsInfoSubheading: {
-    color: Colors.accent,
-    fontSize: 15,
+    color: Colors.primary,
+    fontSize: Fonts.sizes.regular,
     fontWeight: Fonts.weights.bold,
-    marginBottom: 10,
-    textAlign: 'left',
-  },
-  tmsInfoSubheading2: {
-    color: Colors.accent,
-    fontSize: 15,
-    fontWeight: Fonts.weights.bold,
-    marginBottom: 10,
+    marginBottom: 0,
     textAlign: 'left',
   },
   tmsInfoText: {
-    color: Colors.white,
+    color: Colors.text,
     fontSize: Fonts.sizes.medium,
     marginBottom: 10,
     textAlign: 'left',
   },
   tmsInfoText2: {
-    color: Colors.white,
+    color: Colors.text,
     fontSize: Fonts.sizes.medium,
     marginBottom: 18,
     textAlign: 'left',
@@ -1029,37 +1002,37 @@ const styles = StyleSheet.create({
   tmsInfoButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.primary,
     borderRadius: Layout.borderRadius.medium,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingVertical: Layout.spacing.medium,
+    paddingHorizontal: Layout.spacing.large,
     alignSelf: 'flex-start',
   },
   tmsInfoButtonText: {
-    color: Colors.primary,
+    color: Colors.white,
     fontWeight: Fonts.weights.bold,
-    fontSize: 15,
+    fontSize: Fonts.sizes.regular,
     marginRight: 8,
   },
   tmsInfoButtonIcon: {
     marginLeft: 0,
   },
   tmsInfoButtonPressed: {
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.secondary,
   },
   tmsInfoButtonTextPressed: {
     color: Colors.white,
   },
   tmsInfoImage: {
     width: '100%',
-    height: 140,
+    height: 180,
     borderRadius: Layout.borderRadius.large,
     marginTop: 0,
     marginBottom: 18,
   },
   militaryCardSection: {
     marginHorizontal: 0,
-    marginBottom: 50,
+    marginBottom: Spacing.SECTION_TO_SECTION,
     paddingHorizontal: 0,
   },
   militaryCard: {
@@ -1075,9 +1048,9 @@ const styles = StyleSheet.create({
   },
   militaryCardHeading: {
     color: Colors.white,
-    fontSize: Fonts.sizes.large,
+    fontSize: Fonts.sizes.xlarge,
     fontWeight: Fonts.weights.bold,
-    marginBottom: 8,
+    marginBottom: Spacing.TEXT_SPACING,
     textAlign: 'left',
   },
   militaryCardText: {
@@ -1089,45 +1062,42 @@ const styles = StyleSheet.create({
   militaryCardImage: {
     width: '100%',
     height: 170,
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+    borderRadius: Layout.borderRadius.large,
     marginTop: 0,
     marginBottom: 18,
   },
   militarySectionHeading: {
     color: Colors.primary,
-    fontSize: 17,
+    fontSize: Fonts.sizes.large,
     fontWeight: Fonts.weights.bold,
-    marginBottom: 8,
-    marginTop: 8,
-    paddingHorizontal: 24,
+    marginBottom: Spacing.TEXT_SPACING,
+    marginTop: Spacing.TEXT_SPACING,
+    paddingHorizontal: Layout.spacing.large,
     textAlign: 'left',
   },
   militarySectionHeading2: {
     color: Colors.primary,
-    fontSize: 16,
+    fontSize: Fonts.sizes.large,
     fontWeight: Fonts.weights.bold,
-    marginTop: 16,
-    marginBottom: 8,
-    paddingHorizontal: 24,
+    marginTop: Layout.spacing.medium,
+    marginBottom: Spacing.TEXT_SPACING,
+    paddingHorizontal: Layout.spacing.large,
     textAlign: 'left',
   },
   militarySectionSubheading: {
     color: Colors.primary,
     fontWeight: Fonts.weights.bold,
-    fontSize: 15,
-    marginBottom: 2,
-    marginTop: 8,
-    paddingHorizontal: 24,
+    fontSize: Fonts.sizes.regular,
+    marginBottom: 0,
+    marginTop: 0,
+    paddingHorizontal: 0,
     textAlign: 'left',
   },
   militarySectionText: {
     color: Colors.text,
     fontSize: Fonts.sizes.medium,
     marginBottom: 2,
-    paddingHorizontal: 24,
+    paddingHorizontal: Layout.spacing.large,
     textAlign: 'left',
   },
   militarySectionList: {
@@ -1138,7 +1108,49 @@ const styles = StyleSheet.create({
   militarySectionListItem: {
     color: Colors.text,
     fontSize: Fonts.sizes.medium,
-    marginBottom: 2,
+    marginBottom: 0,
     textAlign: 'left',
+    flex: 1,
+  },
+  tmsInfoSubheadingRow2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  tmsInfoSubheading2: {
+    color: Colors.primary,
+    fontSize: Fonts.sizes.regular,
+    fontWeight: Fonts.weights.bold,
+    marginBottom: 0,
+    textAlign: 'left',
+  },
+  militarySubheadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+    marginTop: 8,
+    paddingHorizontal: 24,
+  },
+  militaryBullet: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.primary,
+    marginRight: 8,
+    marginTop: 2,
+  },
+  militaryListItemRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+    paddingHorizontal: 0,
+  },
+  militaryListBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.primary,
+    marginRight: 10,
+    marginTop: 4,
   },
 });
