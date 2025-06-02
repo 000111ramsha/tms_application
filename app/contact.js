@@ -218,7 +218,8 @@ export default function ContactScreen() {
     try {
       // Prepare email content
       const adminEmail = "jasonmiller.dev87@gmail.com";
-      const fromEmail = "onboarding@resend.dev"; // For production, use your verified domain
+      const senderName = "TMS of Emerald Coast";
+      const senderEmail = "onboarding@resend.dev"; // For production, use your verified domain
       const resendApiKey = "re_a6sV9E4m_7z2rZVBbLQpkxbuqdLCam3DR"; // IMPORTANT: Replace with your actual Resend API key
 
       const preferredDateFormatted = fields.date 
@@ -239,11 +240,11 @@ export default function ContactScreen() {
 <style>
   body { margin: 0; padding: 0; width: 100% !important; -webkit-font-smoothing: antialiased; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f0f4f8; color: #333333; }
   .email-container { max-width: 680px; margin: 20px auto; background-color: #F7FAFC; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-  .header { background-color: #2c5264; /* Muted Dark Blue from image */ padding: 20px 33px; text-align: left; }
+  .header { background-color: #2C5282; /* Muted Dark Blue from image */ padding: 30px 30px; text-align: center; }
   .header h1 { color: #ffffff; font-size: 24px; margin: 0 0 5px 0; font-weight: 500; }
-  .header p { color: #b0bec5; /* Lighter grey/blue for subtitle */ font-size: 14px; margin: 0; }
-  .attention-banner { background-color: #FCEEEE; /* Light Pink from image */ padding: 10px 20px; border-left: 5px solid #CC0000; /* Red from image */ }
-  .attention-banner p { margin: 0; font-size: 15px; font-weight: bold; color: #CC0000; /* Red from image */ }
+  .header p { color: #ffffff; /* Lighter grey/blue for subtitle */ font-size: 14px; margin: 0; }
+  .attention-banner { background-color: #FCEEEE; /* Light Pink from image */ padding: 10px 20px; border-left: 5px solid #CC0000; /* Red from image */ margin: 20px 20px; }
+  .attention-banner p { margin: 0; font-size: 15px; font-weight: bold; color: #222222; /* Red from image */ }
   .content { padding: 20px 30px 30px 30px; }
   .field-block { margin-bottom: 18px; }
   .field-block label { display: block; font-size: 14px; color: #2c5264; /* Label color to match header blue */ font-weight: bold; margin-bottom: 6px; }
@@ -312,9 +313,9 @@ export default function ContactScreen() {
       `;
 
       const emailData = {
-        from: fromEmail,
+        from: `"${senderName}" <${senderEmail}>`,
         to: [adminEmail],
-        subject: "New Message - TMS App (Contact Page)",
+        subject: `New Message Submission from ${fields.name}`,
         html: htmlBody,
         reply_to: fields.email.trim(),
       };
@@ -336,7 +337,7 @@ export default function ContactScreen() {
       }
 
       console.log('Message sent and email delivered via Resend:', responseData);
-
+      
       Alert.alert("Message Sent", "Thank you for contacting us. We will get back to you soon!", [
         {
           text: "OK",
