@@ -358,11 +358,11 @@ export default function NewPatientsScreen() {
               <Text style={styles.formsTitle}>Complete Your Required Forms</Text>
             </View>
             {[
+              { title: 'Patient Intake Form', onPress: () => router.push('/patient-demographic-sheet') },
+              { title: 'Med History', onPress: () => router.push('/medical-history') },
               { title: 'Pre Cert Med List', onPress: () => router.push('/pre-cert-med-list') },
               { title: 'BDI', onPress: () => router.push('/bdi') },
               { title: 'PHQ – 9', onPress: () => router.push('/phq-9') },
-              { title: 'Patient Intake Form', onPress: () => router.push('/patient-demographic-sheet') },
-              { title: 'Med History', onPress: () => router.push('/medical-history') },
             ].map((item, idx) => (
               <View style={styles.formCard} key={item.title}>
                 <Text style={styles.formCardTitle}>{item.title}</Text>

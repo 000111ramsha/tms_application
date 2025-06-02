@@ -54,18 +54,18 @@ export default function HomeScreen() {
   const router = useRouter();
   const scrollViewPadding = useScrollViewPadding();
   const { window: dimensions, isTablet, isMobile, isSmallDevice } = useResponsiveDimensions();
-  
+
   // Loading and refresh states
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Video modal state
   const [isVideoModalVisible, setIsVideoModalVisible] = useState(false);
-  
+
   // Animation values for smooth transitions (optional)
   const fadeAnim = useState(new Animated.Value(1))[0]; // Start with 1 (visible)
   const slideAnim = useState(new Animated.Value(0))[0]; // Start with 0 (in position)
-  
+
   // Optional: Add subtle entrance animation on mount
   useEffect(() => {
     // Only animate if desired - content is immediately available
@@ -208,10 +208,10 @@ export default function HomeScreen() {
       // Validate that the selected date is not today or in the past
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const selectedDate = new Date(fields.date);
       selectedDate.setHours(0, 0, 0, 0);
-      
+
       if (selectedDate <= today) {
         newErrors.date = "Please select a future date";
         valid = false;
@@ -255,11 +255,123 @@ export default function HomeScreen() {
 
     setIsSubmitting(true);
     try {
-      // Simulate API call - replace with actual submission logic
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Form submitted:', fields);
-      
+      // Prepare email content
+      const adminEmail = "jasonmiller.dev87@gmail.com";
+      const fromEmail = "onboarding@resend.dev"; // For production, use your verified domain
+      const resendApiKey = "re_a6sV9E4m_7z2rZVBbLQpkxbuqdLCam3DR"; // IMPORTANT: Replace with your actual Resend API key
+
+      const preferredDateFormatted = fields.date
+        ? new Date(fields.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+        : 'Not specified';
+
+      const submissionTime = new Date().toLocaleString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', timeZoneName: 'short'
+      });
+
+      const htmlBody = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Inquiry Submission</title>
+<style>
+  body { margin: 0; padding: 0; width: 100% !important; -webkit-font-smoothing: antialiased; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f0f4f8; color: #333333; }
+  .email-container { max-width: 680px; margin: 20px auto; background-color: #F7FAFC; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+  .header { background-color: #2c5264; /* Muted Dark Blue from image */ padding: 20px 33px; text-align: left; }
+  .header h1 { color: #ffffff; font-size: 24px; margin: 0 0 5px 0; font-weight: 500; }
+  .header p { color: #b0bec5; /* Lighter grey/blue for subtitle */ font-size: 14px; margin: 0; }
+  .attention-banner { background-color: #FCEEEE; /* Light Pink from image */ padding: 10px 20px; border-left: 5px solid #CC0000; /* Red from image */ }
+  .attention-banner p { margin: 0; font-size: 15px; font-weight: bold; color: #CC0000; /* Red from image */ }
+  .content { padding: 20px 30px 30px 30px; }
+  .field-block { margin-bottom: 18px; }
+  .field-block label { display: block; font-size: 14px; color: #2c5264; /* Label color to match header blue */ font-weight: bold; margin-bottom: 6px; }
+  .field-block .value { font-size: 13px; color: #333333; padding: 12px; background-color:#FFFFFF; border-radius: 5px; border: 1px solid #e9ecef; word-wrap: break-word; }
+  .field-block .value a { color: #2E6AD2; text-decoration: none; }
+  .next-steps { background-color: #EFF6FC; /* Light Blue from image */ padding: 20px 30px; margin-top: 20px; border-top: 1px solid #d0e0f0; /* Slightly darker border for definition */ }
+  .next-steps h3 { font-size: 16px; color: #3A537E; /* Heading color to match header blue */ margin-top: 0; margin-bottom: 10px; font-weight: bold; }
+  .next-steps ul { margin: 0; padding-left: 20px; list-style-type: disc; }
+  .next-steps li { font-size: 14px; color: #333333; margin-bottom: 5px; line-height: 1.5; }
+  .footer { text-align: center; padding: 20px; font-size: 12px; color: #777777; }
+</style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="header">
+      <h1>New Inquiry Submission</h1>
+      <p>From: TMS of Emerald Coast App</p>
+    </div>
+    <div class="attention-banner">
+      <p>&#9888;&#65039; New patient inquiry requires attention</p>
+    </div>
+    <div class="content">
+      <div class="field-block">
+        <label>Patient Name:</label>
+        <div class="value">${fields.name}</div>
+      </div>
+      <div class="field-block">
+        <label>Email Address:</label>
+        <div class="value"><a href="mailto:${fields.email.trim()}">${fields.email.trim()}</a></div>
+      </div>
+      <div class="field-block">
+        <label>Preferred Date:</label>
+        <div class="value">${preferredDateFormatted}</div>
+      </div>
+      <div class="field-block">
+        <label>Consultation Type:</label>
+        <div class="value">${fields.consultationType}</div>
+      </div>
+      <div class="field-block">
+        <label>Submission Time:</label>
+        <div class="value">${submissionTime}</div>
+      </div>
+      <div class="field-block">
+        <label>Source:</label>
+        <div class="value">Home Screen Form</div>
+      </div>
+    </div>
+    <div class="next-steps">
+      <h3>Next Steps:</h3>
+      <ul>
+        <li>Contact the patient within 24 hours</li>
+        <li>Schedule their preferred consultation type</li>
+        <li>Send intake forms if needed</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer">
+    <p>&copy; ${new Date().getFullYear()} TMS of Emerald Coast. All rights reserved.</p>
+  </div>
+</body>
+</html>
+      `;
+
+      const emailData = {
+        from: fromEmail,
+        to: [adminEmail],
+        subject: "New Inquiry - TMS App (Home Screen)",
+        html: htmlBody,
+        reply_to: fields.email,
+      };
+
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(emailData),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        console.error('Resend API error:', responseData);
+        throw new Error(responseData.message || "Failed to send email via Resend.");
+      }
+
+      console.log('Form submitted and email sent via Resend:', responseData);
+
       // Success feedback
       try {
         const { Haptics } = await import('expo-haptics');
@@ -267,21 +379,21 @@ export default function HomeScreen() {
       } catch (e) {
         // Haptics not available, continue silently
       }
-      
+
       Alert.alert(
         "Thank You!",
-        "We've received your information and will get back to you soon!",
+        "Your information has been successfully sent. We will get back to you soon!",
         [{ text: "OK", style: "default" }]
       );
-      
+
       resetForm();
       setShowConsultationOptions(false);
-      
+
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error('Form submission or email error:', error);
       Alert.alert(
         "Error",
-        "There was a problem submitting your information. Please try again or call us directly.",
+        `There was a problem submitting your information: ${error.message || 'Please try again or call us directly.'}`,
         [
           { text: "Try Again", style: "default" },
           { text: "Call Now", style: "default", onPress: handleCall }
@@ -308,7 +420,7 @@ export default function HomeScreen() {
   return (
     <AppBar>
       <View style={styles.container}>
-        <Animated.View 
+        <Animated.View
           style={[
             styles.animatedContainer,
             {
@@ -331,14 +443,14 @@ export default function HomeScreen() {
             showsVerticalScrollIndicator={false}
           >
             {/* Hero Section */}
-            <HeroImage 
+            <HeroImage
               source={require("../assets/home-hero.jpeg")}
               height={isMobile ? dimensions.height * 0.6 : isTablet ? 500 : 600}
               priority={true}
             >
               <View style={styles.heroOverlay}>
                 <View style={[styles.heroContent, (isMobile || Platform.OS === 'ios') && { width: "100%" }]}>
-                  <Text 
+                  <Text
                     style={[styles.heroTitle, styles.heroTitleMargin, isSmallDevice && { fontSize: 28 }]}
                     accessibilityRole="header"
                     accessibilityLevel={1}
@@ -348,7 +460,7 @@ export default function HomeScreen() {
                   >
                     Discover Hope Without
                   </Text>
-                  <Text 
+                  <Text
                     style={[styles.heroTitle, isSmallDevice && { fontSize: 28 }]}
                     accessibilityRole="header"
                     accessibilityLevel={1}
@@ -359,16 +471,16 @@ export default function HomeScreen() {
                     Medication
                   </Text>
 
-                  <TouchableOpacity 
-                    style={styles.bbbBadge} 
+                  <TouchableOpacity
+                    style={styles.bbbBadge}
                     onPress={handleBBBBadgePress}
                     accessibilityRole="button"
                     accessibilityLabel="Better Business Bureau Accredited Business"
                     accessibilityHint="Opens BBB profile in browser"
                   >
-                    <OptimizedImage 
-                      source={require("../assets/bbb-badge.png")} 
-                      style={styles.bbbImageLarge} 
+                    <OptimizedImage
+                      source={require("../assets/bbb-badge.png")}
+                      style={styles.bbbImageLarge}
                       resizeMode="contain"
                       priority={true}
                       lazy={false}
@@ -384,8 +496,8 @@ export default function HomeScreen() {
 
                   {/* Buttons Row */}
                   <View style={styles.heroButtonsRow}>
-                    <TouchableButton 
-                      style={styles.contactButton} 
+                    <TouchableButton
+                      style={styles.contactButton}
                       onPress={() => router.push("/contact")}
                       accessibility={{
                         label: "Contact Us"
@@ -393,7 +505,7 @@ export default function HomeScreen() {
                     >
                       <Text style={styles.contactButtonText}>Contact Us</Text>
                     </TouchableButton>
-                    <TouchableButton 
+                    <TouchableButton
                       style={styles.videoButton}
                       onPress={handleWatchVideo}
                       accessibility={{
@@ -410,8 +522,8 @@ export default function HomeScreen() {
 
             {/* Enhanced Contact Form Section */}
             <View style={styles.heroFormWrapper}>
-              <ImageBackground 
-                source={require("../assets/contact-hero.jpg")} 
+              <ImageBackground
+                source={require("../assets/contact-hero.jpg")}
                 style={styles.heroFormBackground}
                 imageStyle={styles.heroFormBackgroundImage}
               >
@@ -425,136 +537,136 @@ export default function HomeScreen() {
                   <Text style={styles.heroFormTitle} numberOfLines={2} ellipsizeMode="tail">
                     Get In Touch With TMS Of Emerald Coast Today
                   </Text>
-              
-              <TextInput
-                style={[styles.heroFormInput, errors.name ? styles.heroFormInputError : null]}
-                placeholder="Your Name"
-                value={fields.name}
-                onChangeText={(value) => setField("name", value)}
-                placeholderTextColor="#bdbdbd"
-                onFocus={() => clearError("name")}
-                accessibilityLabel="Your Name"
-                accessibilityHint="Enter your full name"
-                autoCapitalize="words"
-                autoCorrect={false}
-                maxLength={50}
-                returnKeyType="next"
-                onSubmitEditing={() => {
-                  // Focus will move to next input automatically
-                }}
-              />
-              {errors.name ? (
-                <View style={styles.heroFormErrorContainer}>
-                  <Ionicons name="alert-circle" size={14} color={Colors.error} style={styles.heroFormErrorIcon} />
-                  <Text style={styles.heroFormError}>{errors.name}</Text>
-                </View>
-              ) : null}
-              
-              <ModernDatePicker
-                value={fields.date}
-                onDateChange={(date) => setField("date", date)}
-                placeholder="Select Preferred Date"
-                error={errors.date}
-                onFocus={() => clearError("date")}
-                onBlur={() => {}}
-                style={styles.heroFormDatePicker}
-                borderStyle="transparent"
-              />
-              
-              <TextInput
-                style={[styles.heroFormInput, errors.email ? styles.heroFormInputError : null]}
-                placeholder="Your Email"
-                value={fields.email}
-                onChangeText={(value) => setField("email", value)}
-                placeholderTextColor="#bdbdbd"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                onFocus={() => clearError("email")}
-                accessibilityLabel="Your Email"
-                accessibilityHint="Enter your email address"
-                maxLength={100}
-                returnKeyType="done"
-              />
-              {errors.email ? (
-                <View style={styles.heroFormErrorContainer}>
-                  <Ionicons name="alert-circle" size={14} color={Colors.error} style={styles.heroFormErrorIcon} />
-                  <Text style={styles.heroFormError}>{errors.email}</Text>
-                </View>
-              ) : null}
-              
-              <TouchableButton
-                style={[styles.heroFormDropdown, errors.consultationType ? styles.heroFormInputError : null]}
-                onPress={() => setShowConsultationOptions(!showConsultationOptions)}
-                onPressIn={() => clearError("consultationType")}
-                accessibility={{
-                  label: "Consultation Type",
-                  hint: "Select type of consultation",
-                  state: { expanded: showConsultationOptions }
-                }}
-              >
-                <Text style={styles.heroFormDropdownText}>{fields.consultationType}</Text>
-                <Ionicons 
-                  name={showConsultationOptions ? "chevron-up" : "chevron-down"} 
-                  size={20} 
-                  color="#333" 
-                  style={{ marginLeft: 8 }} 
-                />
-              </TouchableButton>
-              
-              {showConsultationOptions && (
-                <View style={styles.heroFormDropdownOptions}>
-                  {['Consultation', 'Family Counseling', 'Anxiety Disorder', 'Depression', 'TMS Treatment'].map(option => (
-                    <TouchableButton
-                      key={option}
-                      style={styles.heroFormDropdownOption}
-                      onPress={() => {
-                        setField("consultationType", option);
-                        setShowConsultationOptions(false);
-                      }}
-                      accessibility={{
-                        label: option
-                      }}
-                    >
-                      <Text style={styles.heroFormDropdownOptionText}>{option}</Text>
-                    </TouchableButton>
-                  ))}
-                </View>
-              )}
-              
-              {errors.consultationType ? (
-                <View style={styles.heroFormErrorContainer}>
-                  <Ionicons name="alert-circle" size={14} color={Colors.error} style={styles.heroFormErrorIcon} />
-                  <Text style={styles.heroFormError}>{errors.consultationType}</Text>
-                </View>
-              ) : null}
-              
-              <SubmitButton
-                onPress={handleContactSubmit}
-                onPressIn={() => setPressedState("contactForm", true)}
-                onPressOut={() => setPressedState("contactForm", false)}
-                isPressed={pressedStates.contactForm}
-                isSubmitting={isSubmitting}
-                disabled={isSubmitting}
-                title="CONTACT US"
-                icon="send"
-                style={styles.heroFormButtonOverride}
-              />
-             </Pressable>
+
+                  <TextInput
+                    style={[styles.heroFormInput, errors.name ? styles.heroFormInputError : null]}
+                    placeholder="Your Name"
+                    value={fields.name}
+                    onChangeText={(value) => setField("name", value)}
+                    placeholderTextColor="#bdbdbd"
+                    onFocus={() => clearError("name")}
+                    accessibilityLabel="Your Name"
+                    accessibilityHint="Enter your full name"
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    maxLength={50}
+                    returnKeyType="next"
+                    onSubmitEditing={() => {
+                      // Focus will move to next input automatically
+                    }}
+                  />
+                  {errors.name ? (
+                    <View style={styles.heroFormErrorContainer}>
+                      <Ionicons name="alert-circle" size={14} color={Colors.error} style={styles.heroFormErrorIcon} />
+                      <Text style={styles.heroFormError}>{errors.name}</Text>
+                    </View>
+                  ) : null}
+
+                  <ModernDatePicker
+                    value={fields.date}
+                    onDateChange={(date) => setField("date", date)}
+                    placeholder="Select Preferred Date"
+                    error={errors.date}
+                    onFocus={() => clearError("date")}
+                    onBlur={() => { }}
+                    style={styles.heroFormDatePicker}
+                    borderStyle="transparent"
+                  />
+
+                  <TextInput
+                    style={[styles.heroFormInput, errors.email ? styles.heroFormInputError : null]}
+                    placeholder="Your Email"
+                    value={fields.email}
+                    onChangeText={(value) => setField("email", value)}
+                    placeholderTextColor="#bdbdbd"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    onFocus={() => clearError("email")}
+                    accessibilityLabel="Your Email"
+                    accessibilityHint="Enter your email address"
+                    maxLength={100}
+                    returnKeyType="done"
+                  />
+                  {errors.email ? (
+                    <View style={styles.heroFormErrorContainer}>
+                      <Ionicons name="alert-circle" size={14} color={Colors.error} style={styles.heroFormErrorIcon} />
+                      <Text style={styles.heroFormError}>{errors.email}</Text>
+                    </View>
+                  ) : null}
+
+                  <TouchableButton
+                    style={[styles.heroFormDropdown, errors.consultationType ? styles.heroFormInputError : null]}
+                    onPress={() => setShowConsultationOptions(!showConsultationOptions)}
+                    onPressIn={() => clearError("consultationType")}
+                    accessibility={{
+                      label: "Consultation Type",
+                      hint: "Select type of consultation",
+                      state: { expanded: showConsultationOptions }
+                    }}
+                  >
+                    <Text style={styles.heroFormDropdownText}>{fields.consultationType}</Text>
+                    <Ionicons
+                      name={showConsultationOptions ? "chevron-up" : "chevron-down"}
+                      size={20}
+                      color="#333"
+                      style={{ marginLeft: 8 }}
+                    />
+                  </TouchableButton>
+
+                  {showConsultationOptions && (
+                    <View style={styles.heroFormDropdownOptions}>
+                      {['Consultation', 'Family Counseling', 'Anxiety Disorder', 'Depression', 'TMS Treatment'].map(option => (
+                        <TouchableButton
+                          key={option}
+                          style={styles.heroFormDropdownOption}
+                          onPress={() => {
+                            setField("consultationType", option);
+                            setShowConsultationOptions(false);
+                          }}
+                          accessibility={{
+                            label: option
+                          }}
+                        >
+                          <Text style={styles.heroFormDropdownOptionText}>{option}</Text>
+                        </TouchableButton>
+                      ))}
+                    </View>
+                  )}
+
+                  {errors.consultationType ? (
+                    <View style={styles.heroFormErrorContainer}>
+                      <Ionicons name="alert-circle" size={14} color={Colors.error} style={styles.heroFormErrorIcon} />
+                      <Text style={styles.heroFormError}>{errors.consultationType}</Text>
+                    </View>
+                  ) : null}
+
+                  <SubmitButton
+                    onPress={handleContactSubmit}
+                    onPressIn={() => setPressedState("contactForm", true)}
+                    onPressOut={() => setPressedState("contactForm", false)}
+                    isPressed={pressedStates.contactForm}
+                    isSubmitting={isSubmitting}
+                    disabled={isSubmitting}
+                    title="CONTACT US"
+                    icon="send"
+                    style={styles.heroFormButtonOverride}
+                  />
+                </Pressable>
               </ImageBackground>
             </View>
 
             {/* Enhanced TMS Info Section */}
             <View style={styles.tmsInfoSection}>
-              <OptimizedImage 
-                source={require("../assets/patient-image.png")} 
-                style={styles.tmsInfoImage} 
+              <OptimizedImage
+                source={require("../assets/patient-image.png")}
+                style={styles.tmsInfoImage}
                 resizeMode="cover"
                 lazy={false}
                 priority={true}
                 accessibilityLabel="Patient receiving TMS therapy treatment"
               />
-              <Text 
+              <Text
                 style={styles.tmsInfoHeading}
                 accessibilityRole="header"
                 accessibilityLevel={2}
@@ -576,7 +688,7 @@ export default function HomeScreen() {
                 TMS therapy works by using magnetic pulses to gently stimulate specific areas of the brain involved in mood regulation. These pulses help activate brain cells, which can improve symptoms of depression and other mental health conditions. The procedure is non-invasive, painless, and does not require medication.
               </Text>
               <View style={styles.tmsInfoButtonRow}>
-                <TouchableButton 
+                <TouchableButton
                   style={styles.tmsInfoButton}
                   pressedStyle={styles.tmsInfoButtonPressed}
                   onPress={handleLearnMore}
@@ -588,11 +700,11 @@ export default function HomeScreen() {
                   <Text style={styles.tmsInfoButtonText}>
                     LEARN MORE
                   </Text>
-                  <Ionicons 
-                    name="arrow-forward" 
-                    size={18} 
-                    color={Colors.white} 
-                    style={styles.tmsInfoButtonIcon} 
+                  <Ionicons
+                    name="arrow-forward"
+                    size={18}
+                    color={Colors.white}
+                    style={styles.tmsInfoButtonIcon}
                   />
                 </TouchableButton>
               </View>
@@ -601,15 +713,15 @@ export default function HomeScreen() {
             {/* Military TMS Section */}
             <View style={styles.militaryCardSection}>
               <View style={styles.militaryCard}>
-                <OptimizedImage 
-                  source={require("../assets/treatment-hero.png")} 
-                  style={styles.militaryCardImage} 
+                <OptimizedImage
+                  source={require("../assets/treatment-hero.png")}
+                  style={styles.militaryCardImage}
                   resizeMode="cover"
                   lazy={false}
                   priority={true}
                   accessibilityLabel="TMS treatment video thumbnail"
                 />
-                <Text 
+                <Text
                   style={styles.militaryCardHeading}
                   accessibilityRole="header"
                   accessibilityLevel={2}
@@ -621,14 +733,14 @@ export default function HomeScreen() {
                 </Text>
               </View>
 
-              <Text 
+              <Text
                 style={styles.militarySectionHeading}
                 accessibilityRole="header"
                 accessibilityLevel={3}
               >
                 How TMS Helps Military Personnel
               </Text>
-              
+
               <View style={styles.militarySubheadingRow}>
                 <View style={styles.militaryBullet} />
                 <Text style={styles.militarySectionSubheading}>PTSD Treatment</Text>
@@ -636,7 +748,7 @@ export default function HomeScreen() {
               <Text style={styles.militarySectionText}>
                 TMS targets areas of the brain linked to emotional regulation and fear response, helping reduce PTSD symptoms such as flashbacks, hypervigilance, and mood instability.
               </Text>
-              
+
               <View style={styles.militarySubheadingRow}>
                 <View style={styles.militaryBullet} />
                 <Text style={styles.militarySectionSubheading}>Depression Relief</Text>
@@ -644,7 +756,7 @@ export default function HomeScreen() {
               <Text style={styles.militarySectionText}>
                 Many military members experience treatment-resistant depression. TMS is an FDA-approved, non-invasive option that has shown effectiveness when traditional therapies fail.
               </Text>
-              
+
               <View style={styles.militarySubheadingRow}>
                 <View style={styles.militaryBullet} />
                 <Text style={styles.militarySectionSubheading}>Traumatic Brain Injury (TBI) Support</Text>
@@ -652,7 +764,7 @@ export default function HomeScreen() {
               <Text style={styles.militarySectionText}>
                 Some research suggests TMS may help with cognitive function and mood regulation in those who have suffered mild TBI.
               </Text>
-              
+
               <View style={styles.militarySubheadingRow}>
                 <View style={styles.militaryBullet} />
                 <Text style={styles.militarySectionSubheading}>Anxiety & Insomnia</Text>
@@ -660,7 +772,7 @@ export default function HomeScreen() {
               <Text style={styles.militarySectionText}>
                 TMS can regulate brain activity associated with anxiety disorders and sleep disturbances.
               </Text>
-              
+
               <View style={styles.militarySubheadingRow}>
                 <View style={styles.militaryBullet} />
                 <Text style={styles.militarySectionSubheading}>Non-Medicated Solution</Text>
@@ -669,7 +781,7 @@ export default function HomeScreen() {
                 Many military personnel prefer non-drug treatments to avoid side effects and dependency issues associated with medications.
               </Text>
 
-              <Text 
+              <Text
                 style={styles.militarySectionHeading2}
                 accessibilityRole="header"
                 accessibilityLevel={3}
@@ -695,7 +807,7 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              <Text 
+              <Text
                 style={styles.militarySectionHeading2}
                 accessibilityRole="header"
                 accessibilityLevel={3}
@@ -716,33 +828,33 @@ export default function HomeScreen() {
                   <Text style={styles.militarySectionListItem}>Some private clinics also offer TMS specifically for veterans.</Text>
                 </View>
               </View>
-                         </View>
+            </View>
 
-             {/* FAQ Section */}
-             <FAQSection faqItems={faqItems} />
+            {/* FAQ Section */}
+            <FAQSection faqItems={faqItems} />
 
             {/* Take Control Section */}
-            <TakeControlSection 
+            <TakeControlSection
               imageSource={require("../assets/device.png")}
             />
 
-                     </ScrollView>
-         </Animated.View>
-         
-         {/* Floating Action Button */}
-         <FloatingActionButton />
-         
-         {/* Video Modal */}
-         <SimpleVideoModal
-           visible={isVideoModalVisible}
-           onClose={() => setIsVideoModalVisible(false)}
-           videoUri="https://tmsofemeraldcoast.com/wp-content/uploads/2025/05/TMSMilitaryNew.m4v"
-           title="TMS Military Treatment Information"
-         />
-       </View>
-     </AppBar>
-   );
- }
+          </ScrollView>
+        </Animated.View>
+
+        {/* Floating Action Button */}
+        <FloatingActionButton />
+
+        {/* Video Modal */}
+        <SimpleVideoModal
+          visible={isVideoModalVisible}
+          onClose={() => setIsVideoModalVisible(false)}
+          videoUri="https://tmsofemeraldcoast.com/wp-content/uploads/2025/05/TMSMilitaryNew.m4v"
+          title="TMS Military Treatment Information"
+        />
+      </View>
+    </AppBar>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {

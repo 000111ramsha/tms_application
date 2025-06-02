@@ -216,22 +216,139 @@ export default function ContactScreen() {
     setIsSubmitting(true);
 
     try {
-      // In a real app, you would send this data to your backend
-      console.log(fields);
+      // Prepare email content
+      const adminEmail = "jasonmiller.dev87@gmail.com";
+      const fromEmail = "onboarding@resend.dev"; // For production, use your verified domain
+      const resendApiKey = "re_a6sV9E4m_7z2rZVBbLQpkxbuqdLCam3DR"; // IMPORTANT: Replace with your actual Resend API key
+
+      const preferredDateFormatted = fields.date 
+        ? new Date(fields.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+        : 'Not specified';
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const submissionTime = new Date().toLocaleString('en-US', { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', timeZoneName: 'short' 
+      });
+
+      const htmlBody = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Message Submission</title>
+<style>
+  body { margin: 0; padding: 0; width: 100% !important; -webkit-font-smoothing: antialiased; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f0f4f8; color: #333333; }
+  .email-container { max-width: 680px; margin: 20px auto; background-color: #F7FAFC; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+  .header { background-color: #2c5264; /* Muted Dark Blue from image */ padding: 20px 33px; text-align: left; }
+  .header h1 { color: #ffffff; font-size: 24px; margin: 0 0 5px 0; font-weight: 500; }
+  .header p { color: #b0bec5; /* Lighter grey/blue for subtitle */ font-size: 14px; margin: 0; }
+  .attention-banner { background-color: #FCEEEE; /* Light Pink from image */ padding: 10px 20px; border-left: 5px solid #CC0000; /* Red from image */ }
+  .attention-banner p { margin: 0; font-size: 15px; font-weight: bold; color: #CC0000; /* Red from image */ }
+  .content { padding: 20px 30px 30px 30px; }
+  .field-block { margin-bottom: 18px; }
+  .field-block label { display: block; font-size: 14px; color: #2c5264; /* Label color to match header blue */ font-weight: bold; margin-bottom: 6px; }
+  .field-block .value { font-size: 13px; color: #333333; padding: 12px; background-color: #FFFFFF; border-radius: 5px; border: 1px solid #e9ecef; word-wrap: break-word; white-space: pre-wrap; /* To preserve message line breaks */ }
+  .field-block .value a { color: #2E6AD2; text-decoration: none; }
+  .next-steps { background-color: #EFF6FC; /* Light Blue from image */ padding: 20px 30px; margin-top: 20px; border-top: 1px solid #d0e0f0; /* Slightly darker border for definition */ }
+  .next-steps h3 { font-size: 16px; color: #3A537E; /* Heading color to match header blue */ margin-top: 0; margin-bottom: 10px; font-weight: bold; }
+  .next-steps ul { margin: 0; padding-left: 20px; list-style-type: disc; }
+  .next-steps li { font-size: 14px; color: #333333; margin-bottom: 5px; line-height: 1.5; }
+  .footer { text-align: center; padding: 20px; font-size: 12px; color: #777777; }
+</style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="header">
+      <h1>New Message Submission</h1>
+      <p>From: TMS of Emerald Coast App</p>
+    </div>
+    <div class="attention-banner">
+      <p>&#9888;&#65039; New patient inquiry requires attention</p>
+    </div>
+    <div class="content">
+      <div class="field-block">
+        <label>Patient Name:</label>
+        <div class="value">${fields.name}</div>
+      </div>
+      <div class="field-block">
+        <label>Email Address:</label>
+        <div class="value"><a href="mailto:${fields.email.trim()}">${fields.email.trim()}</a></div>
+      </div>
+      <div class="field-block">
+        <label>Preferred Date:</label>
+        <div class="value">${preferredDateFormatted}</div>
+      </div>
+      <div class="field-block">
+        <label>Consultation Type:</label>
+        <div class="value">${fields.consultationType}</div>
+      </div>
+      <div class="field-block">
+        <label>Message:</label>
+        <div class="value">${fields.message}</div>
+      </div>
+      <div class="field-block">
+        <label>Submission Time:</label>
+        <div class="value">${submissionTime}</div>
+      </div>
+      <div class="field-block">
+        <label>Source:</label>
+        <div class="value">Contact Page Form</div>
+      </div>
+    </div>
+    <div class="next-steps">
+      <h3>Next Steps:</h3>
+      <ul>
+        <li>Contact the patient within 24 hours</li>
+        <li>Schedule their preferred consultation type</li>
+        <li>Send intake forms if needed</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer">
+    <p>&copy; ${new Date().getFullYear()} TMS of Emerald Coast. All rights reserved.</p>
+  </div>
+</body>
+</html>
+      `;
+
+      const emailData = {
+        from: fromEmail,
+        to: [adminEmail],
+        subject: "New Message - TMS App (Contact Page)",
+        html: htmlBody,
+        reply_to: fields.email.trim(),
+      };
+
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(emailData),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        console.error('Resend API error:', responseData);
+        throw new Error(responseData.message || "Failed to send email via Resend.");
+      }
+
+      console.log('Message sent and email delivered via Resend:', responseData);
+
       Alert.alert("Message Sent", "Thank you for contacting us. We will get back to you soon!", [
         {
           text: "OK",
           onPress: () => {
             resetForm();
+            // Optionally, navigate away or clear other states
           },
         },
       ]);
     } catch (error) {
-      Alert.alert("Error", "Failed to send message. Please try again.");
+      console.error('Message sending error:', error);
+      Alert.alert("Error", `Failed to send message: ${error.message || 'Please try again.'}`);
     } finally {
       setIsSubmitting(false);
     }
