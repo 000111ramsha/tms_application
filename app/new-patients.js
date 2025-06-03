@@ -49,6 +49,8 @@ export default function NewPatientsScreen() {
     require("../assets/logo2.png"),
     require("../assets/logo3.png"),
     require("../assets/logo4.png"),
+    require("../assets/logo5.png"),
+    require("../assets/logo6.png"),
 
     // Add more logos as needed
   ];

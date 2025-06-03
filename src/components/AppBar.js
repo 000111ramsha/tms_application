@@ -14,6 +14,7 @@ import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Drawer } from "react-native-drawer-layout";
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Import context
 import { useBottomNavContext } from "../context/BottomNavContext";
@@ -52,7 +53,7 @@ export default function AppBar({ children }) {
       <View
         style={[styles.drawerHeader, { paddingTop: insets.top + 20 }]}
       >
-        <Image source={require("../../assets/tms-logo.png")} style={styles.drawerLogo} resizeMode="contain" />
+        <Image source={require("../../assets/tms-logo2.png")} style={styles.drawerLogo} resizeMode="contain" />
       </View>
       <View style={styles.drawerContent}>
         <TouchableOpacity style={styles.drawerItem} onPress={() => {
@@ -146,7 +147,10 @@ export default function AppBar({ children }) {
         onClose={() => setDrawerOpen(false)}
       >
         <View style={[styles.safeArea, { paddingTop: insets.top }]}>
-          <View style={styles.navigation}>
+          <LinearGradient
+            colors={[Colors.primary, Colors.accessiblePrimary]}
+            style={styles.navigation}
+          >
             <TouchableOpacity
               style={styles.logoContainer}
               onPress={() => router.push("/")}
@@ -168,7 +172,7 @@ export default function AppBar({ children }) {
                 <Ionicons name="menu" size={isSmallDevice ? 22 : 26} color={Colors.white} />
               </TouchableOpacity>
             </View>
-          </View>
+          </LinearGradient>
           <View style={styles.contentContainer}>
             {children}
           </View>
@@ -188,7 +192,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   navigation: {
-    backgroundColor: Colors.primary,
     padding: Layout.spacing.medium,
     flexDirection: "row",
     alignItems: "center",
