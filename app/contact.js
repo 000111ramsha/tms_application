@@ -240,11 +240,11 @@ export default function ContactScreen() {
 <style>
   body { margin: 0; padding: 0; width: 100% !important; -webkit-font-smoothing: antialiased; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f0f4f8; color: #333333; }
   .email-container { max-width: 680px; margin: 20px auto; background-color: #F7FAFC; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-  .header { background-color: #2C5282; /* Muted Dark Blue from image */ padding: 30px 30px; text-align: center; }
+  .header { background-color: #2C5282; /* Muted Dark Blue from image */ padding: 35px 25px; text-align: center; }
   .header h1 { color: #ffffff; font-size: 24px; margin: 0 0 5px 0; font-weight: 500; }
   .header p { color: #ffffff; /* Lighter grey/blue for subtitle */ font-size: 14px; margin: 0; }
-  .attention-banner { background-color: #FCEEEE; /* Light Pink from image */ padding: 10px 20px; border-left: 5px solid #CC0000; /* Red from image */ margin: 20px 20px; }
-  .attention-banner p { margin: 0; font-size: 15px; font-weight: bold; color: #222222; /* Red from image */ }
+  .attention-banner { background-color: #FED7D7; /* Light Pink from image */ padding: 10px 20px; border-left: 5px solid #CC0000; /* Red from image */ margin: 20px 20px; }
+  .attention-banner p { margin: 0; font-size: 14px; font-weight: bold; color: #222222; /* Red from image */ }
   .content { padding: 20px 30px 30px 30px; }
   .field-block { margin-bottom: 18px; }
   .field-block label { display: block; font-size: 14px; color: #2c5264; /* Label color to match header blue */ font-weight: bold; margin-bottom: 6px; }
