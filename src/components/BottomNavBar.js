@@ -121,6 +121,5 @@ const styles = StyleSheet.create({
   },
   activeNavLabel: {
     color: Colors.primary,
-    fontWeight: Fonts.weights.bold,
   },
 });

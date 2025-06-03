@@ -132,6 +132,7 @@ export default function AppBar({ children }) {
       <StatusBar
         backgroundColor={Colors.primary}
         barStyle="light-content"
+
       />
       <Drawer
         drawerType="front"
@@ -186,10 +187,11 @@ export default function AppBar({ children }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.primary,
   },
   contentContainer: {
     flex: 1,
+    backgroundColor: Colors.background,
   },
   navigation: {
     padding: Layout.spacing.medium,
