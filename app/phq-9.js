@@ -52,6 +52,18 @@ export default function PHQ9Screen() {
   const [isSubmitPressed, setIsSubmitPressed] = useState(false);
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
 
+  // Calculate total score
+  const calculateTotalScore = () => {
+    let total = 0;
+    for (let i = 0; i < phqQuestions.length; i++) {
+      const response = formData.responses[i];
+      if (response) {
+        total += parseInt(response);
+      }
+    }
+    return total;
+  };
+
   const handleResponseChange = (questionIndex, value) => {
     setFormData(prev => ({
       ...prev,
@@ -158,6 +170,14 @@ export default function PHQ9Screen() {
                   </View>
                 );
               })}
+            </View>
+
+            {/* Total Score Section */}
+            <View style={styles.totalScoreSection}>
+              <Text style={styles.totalScoreLabel}>Total Score</Text>
+              <View style={styles.totalScoreField}>
+                <Text style={styles.totalScoreText}>{calculateTotalScore()}</Text>
+              </View>
             </View>
 
             {/* Submit Button */}
@@ -290,5 +310,36 @@ const styles = StyleSheet.create({
   dropdownOptionText: {
     fontSize: Fonts.sizes.regular,
     color: '#000000',
+  },
+  totalScoreSection: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 0,
+    padding: Layout.spacing.large,
+    marginBottom: Spacing.SECTION_TO_SECTION,
+    shadowColor: Colors.black,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  totalScoreLabel: {
+    fontSize: Fonts.sizes.regular,
+    fontWeight: Fonts.weights.bold,
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  totalScoreField: {
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    borderRadius: Layout.borderRadius.medium,
+    backgroundColor: Colors.white,
+    padding: 14,
+    minHeight: 50,
+    justifyContent: 'center',
+  },
+  totalScoreText: {
+    fontSize: Fonts.sizes.regular,
+    color: Colors.text,
+    textAlign: 'left',
+    fontWeight: Fonts.weights.bold,
   },
 }); 

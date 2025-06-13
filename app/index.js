@@ -565,12 +565,30 @@ export default function HomeScreen() {
 
                   <ModernDatePicker
                     value={fields.date}
-                    onDateChange={(date) => setField("date", date)}
+                    onDateChange={(date) => {
+                      // Validate date for home form
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      
+                      const selectedDate = new Date(date);
+                      selectedDate.setHours(0, 0, 0, 0);
+                      
+                      if (selectedDate <= today) {
+                        setError("date", "Please select a future date");
+                        return;
+                      }
+                      
+                      setField("date", date);
+                      if (errors.date) validateDateField(date);
+                    }}
                     placeholder="Select Preferred Date"
                     error={errors.date}
                     onFocus={() => clearError("date")}
-                    onBlur={() => { }}
+                    onBlur={() => validateDateField(fields.date)}
                     style={styles.heroFormDatePicker}
+                    placeholderTextColor="#666"
+                    textColor="#222"
+                    minimumDate={new Date()} // Restrict to future dates
                     borderStyle="transparent"
                   />
 
@@ -1005,7 +1023,7 @@ const styles = StyleSheet.create({
     borderRadius: Layout.borderRadius.medium,
     paddingVertical: 14,
     paddingHorizontal: 12,
-    fontSize: Fonts.sizes.medium,
+    fontSize: Fonts.sizes.regular,
     marginBottom: 16,
   },
   heroFormDatePicker: {
@@ -1027,7 +1045,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   heroFormDropdownText: {
-    fontSize: Fonts.sizes.medium,
+    fontSize: Fonts.sizes.regular,
     color: '#222',
   },
   heroFormDropdownOptions: {

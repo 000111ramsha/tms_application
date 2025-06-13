@@ -42,7 +42,8 @@
           "backgroundColor": "#ffffff",
           "imageWidth": 150
         }
-      ]
+      ],
+      "expo-video"
     ],
     "extra": {
       "router": {},

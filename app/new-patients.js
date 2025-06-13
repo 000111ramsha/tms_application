@@ -2,6 +2,7 @@ import { StyleSheet, View, Text, ScrollView, TouchableOpacity, SafeAreaView, Ima
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Import components
 import AppBar from "../src/components/AppBar";
@@ -366,7 +367,13 @@ export default function NewPatientsScreen() {
               { title: 'BDI', onPress: () => router.push('/bdi') },
               { title: 'PHQ – 9', onPress: () => router.push('/phq-9') },
             ].map((item, idx) => (
-              <View style={styles.formCard} key={item.title}>
+              <LinearGradient
+                key={item.title}
+                colors={['#e8f4f8', '#d3e1e1']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.formCard}
+              >
                 <Text style={styles.formCardTitle}>{item.title}</Text>
                 <TouchableOpacity 
                   style={[
@@ -391,7 +398,7 @@ export default function NewPatientsScreen() {
                     style={styles.formCardButtonIcon} 
                   />
                 </TouchableOpacity>
-              </View>
+              </LinearGradient>
             ))}
           </View>
 
@@ -932,7 +939,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   formCard: {
-    backgroundColor: '#dbe5e7',
     borderRadius: Layout.borderRadius.large,
     alignItems: 'center',
     paddingVertical: Layout.spacing.xxlarge,

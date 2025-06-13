@@ -184,12 +184,29 @@ export default function BDIScreen() {
   const { animatedStyle } = useScreenAnimation();
   
   const [formData, setFormData] = useState({
-    responses: {},
-    totalScore: ""
+    responses: {}
   });
   
   const [isSubmitPressed, setIsSubmitPressed] = useState(false);
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+
+  // Calculate total score
+  const calculateTotalScore = () => {
+    let total = 0;
+    for (let i = 0; i < bdiQuestions.length; i++) {
+      const response = formData.responses[i];
+      if (response) {
+        // Handle special cases for sleep and appetite questions
+        if (i === 15 || i === 17) { // Sleep and Appetite questions
+          const value = response.replace(/[a-z]/g, ''); // Remove letters from values like "1a", "1b"
+          total += parseInt(value);
+        } else {
+          total += parseInt(response);
+        }
+      }
+    }
+    return total;
+  };
 
   const handleResponseChange = (questionIndex, value) => {
     setFormData(prev => ({
@@ -198,13 +215,6 @@ export default function BDIScreen() {
         ...prev.responses,
         [questionIndex]: value
       }
-    }));
-  };
-
-  const handleTotalScoreChange = (value) => {
-    setFormData(prev => ({
-      ...prev,
-      totalScore: value
     }));
   };
 
@@ -347,14 +357,9 @@ export default function BDIScreen() {
             {/* Total Score */}
             <View style={styles.totalScoreSection}>
               <Text style={styles.totalScoreLabel}>Total Score</Text>
-              <TextInput
-                style={styles.totalScoreInput}
-                value={formData.totalScore}
-                onChangeText={handleTotalScoreChange}
-                placeholder="Enter total score"
-                placeholderTextColor="#666666"
-                keyboardType="numeric"
-              />
+              <View style={styles.totalScoreField}>
+                <Text style={styles.totalScoreText}>{calculateTotalScore()}</Text>
+              </View>
             </View>
 
             {/* Submit Button */}
@@ -548,14 +553,19 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginBottom: 8,
   },
-  totalScoreInput: {
+  totalScoreField: {
     borderWidth: 1,
     borderColor: Colors.primary,
     borderRadius: Layout.borderRadius.medium,
-    padding: 12,
-    fontSize: Fonts.sizes.regular,
-    color: '#000000',
     backgroundColor: Colors.white,
-    fontWeight: Fonts.weights.medium,
+    padding: 14,
+    minHeight: 50,
+    justifyContent: 'center',
+  },
+  totalScoreText: {
+    fontSize: Fonts.sizes.regular,
+    color: Colors.text,
+    textAlign: 'left',
+    fontWeight: Fonts.weights.bold,
   },
 }); 
