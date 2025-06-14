@@ -1,11 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, SafeAreaView, Image, TextInput, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import FormSubmissionService from "../src/services/FormSubmissionService";
+
+// Import validation
+import { FormValidator } from "../src/utils/formValidation";
 
 // Import components
 import AppBar from "../src/components/AppBar";
 import SubmitButton from "../src/components/SubmitButton";
+import LoadingOverlay from "../src/components/LoadingOverlay";
+import SuccessModal from "../src/components/SuccessModal";
 
 // Import context
 import { useScrollViewPadding } from "../src/context/BottomNavContext";
@@ -178,17 +184,30 @@ const bdiOptions = {
   ]
 };
 
-export default function BDIScreen() {
+const BDIScreen = () => {
   const router = useRouter();
   const scrollViewPadding = useScrollViewPadding();
   const { animatedStyle } = useScreenAnimation();
+  const scrollViewRef = useRef(null);
   
   const [formData, setFormData] = useState({
     responses: {}
   });
-  
+
   const [isSubmitPressed, setIsSubmitPressed] = useState(false);
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [showErrors, setShowErrors] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Create refs for each question
+  const questionRefs = useRef([]);
+
+  // Initialize refs array
+  useEffect(() => {
+    questionRefs.current = questionRefs.current.slice(0, bdiQuestions.length);
+  }, []);
 
   // Calculate total score
   const calculateTotalScore = () => {
@@ -216,26 +235,85 @@ export default function BDIScreen() {
         [questionIndex]: value
       }
     }));
+
+    // Clear validation errors when user makes a selection
+    if (validationErrors.responses) {
+      setValidationErrors(prev => ({
+        ...prev,
+        responses: ''
+      }));
+    }
   };
 
-  const handleSubmit = () => {
-    // Check if all questions are answered
-    const unansweredQuestions = [];
-    for (let i = 0; i < bdiQuestions.length; i++) {
-      if (!formData.responses[i] || formData.responses[i] === "Select") {
-        unansweredQuestions.push(i + 1);
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+
+    try {
+      setShowErrors(true);
+
+      // Validate responses using FormValidator
+      const validation = FormValidator.validateAssessmentResponses(formData.responses, bdiQuestions.length);
+
+      if (!validation.isValid) {
+        setValidationErrors({ responses: validation.error });
+        
+        // Scroll to the first unanswered question
+        if (validation.unansweredQuestions.length > 0) {
+          const firstUnansweredIndex = validation.unansweredQuestions[0] - 1;
+          const questionRef = questionRefs.current[firstUnansweredIndex];
+          if (questionRef && scrollViewRef.current) {
+            questionRef.measureLayout(
+              scrollViewRef.current,
+              (x, y) => {
+                scrollViewRef.current.scrollTo({ y, animated: true });
+              },
+              () => console.log('Failed to measure layout')
+            );
+          }
+        }
+
+        Alert.alert(
+          "Validation Error",
+          validation.error,
+          [{ text: "OK" }]
+        );
+        return;
       }
+
+      // Clear validation errors and start submission
+      setValidationErrors({});
+      setIsSubmitting(true);
+
+      const totalScore = calculateTotalScore();
+
+      // Format responses for submission
+      const formattedResponses = {};
+      for (let i = 0; i < bdiQuestions.length; i++) {
+        formattedResponses[i] = formData.responses[i] || '0';
+      }
+
+      // Submit BDI assessment using the new service
+      const result = await FormSubmissionService.submitBDIAssessment({
+        totalScore: totalScore,
+        responses: formattedResponses
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // Show success modal
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error('Error saving BDI responses:', error);
+      Alert.alert("Error", "Failed to save BDI assessment. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    if (unansweredQuestions.length > 0) {
-      Alert.alert("Error", `Please answer all questions. Missing responses for question(s): ${unansweredQuestions.join(", ")}`);
-      return;
-    }
-    
-    // Here you would typically send the data to your backend
-    Alert.alert("Success", "BDI questionnaire submitted successfully!");
-    
-    // Navigate back or to next screen
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
     router.back();
   };
 
@@ -246,7 +324,10 @@ export default function BDIScreen() {
   return (
     <AppBar>
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={scrollViewPadding}>
+        <ScrollView 
+          ref={scrollViewRef}
+          contentContainerStyle={scrollViewPadding}
+        >
           {/* Hero Section */}
           <View style={styles.heroSection}>
             <Image source={require("../assets/new-patient-hero.jpg")} style={styles.heroImage} />
@@ -267,35 +348,35 @@ export default function BDIScreen() {
             <View style={styles.instructionsSection}>
               <Text style={styles.sectionTitle}>Instructions</Text>
               <Text style={styles.instructionsText}>
-                This questionnaire consists of 21 groups of statements. Please read each group of statements carefully.
+                This questionnaire consists of 21 groups of statements. Please read each group of statements carefully and select the one statement that best describes how you have been feeling during the past two weeks, including today.
               </Text>
               
               <View style={styles.bulletPoints}>
                 <View style={styles.bulletPoint}>
                   <View style={styles.bullet} />
                   <Text style={styles.bulletText}>
-                    Then pick the one statement in each group that best describes the way you have been feeling during the past two weeks, including today.
+                    Select only one statement for each question that best matches your feelings.
                   </Text>
                 </View>
                 
                 <View style={styles.bulletPoint}>
                   <View style={styles.bullet} />
                   <Text style={styles.bulletText}>
-                    Circle the number beside the statement you have picked.
+                    If several statements seem to apply equally well, select the one with the highest number.
                   </Text>
                 </View>
                 
                 <View style={styles.bulletPoint}>
                   <View style={styles.bullet} />
                   <Text style={styles.bulletText}>
-                    If several statements in the group seem to apply equally well, circle the highest number for that group.
+                    For questions about sleep (Question 16) and appetite (Question 18), select only one option that best describes your experience.
                   </Text>
                 </View>
                 
                 <View style={styles.bulletPoint}>
                   <View style={styles.bullet} />
                   <Text style={styles.bulletText}>
-                    Be sure that you do not choose more than one statement for any group, including Item 16 (Changes in Sleeping Pattern) or Item 18 (Changes in Appetite).
+                    Your total score will be calculated automatically as you complete the questionnaire.
                   </Text>
                 </View>
               </View>
@@ -310,10 +391,20 @@ export default function BDIScreen() {
                 const displayText = selectedOption ? selectedOption.label : "Select";
                 
                 return (
-                  <View key={index} style={styles.questionCard}>
+                  <View 
+                    key={index} 
+                    ref={el => questionRefs.current[index] = el}
+                    style={[
+                      styles.questionCard,
+                      validationErrors.responses && showErrors && !formData.responses[index] && styles.questionCardError
+                    ]}
+                  >
                     <Text style={styles.questionNumber}>{index + 1}. {question}</Text>
                     
-                    <View style={styles.dropdownContainer}>
+                    <View style={[
+                      styles.dropdownContainer,
+                      validationErrors.responses && showErrors && !formData.responses[index] && styles.dropdownContainerError
+                    ]}>
                       <TouchableOpacity
                         style={styles.dropdown}
                         onPress={() => setOpenDropdownIndex(isOpen ? null : index)}
@@ -324,7 +415,7 @@ export default function BDIScreen() {
                         <Ionicons 
                           name={isOpen ? "chevron-up" : "chevron-down"} 
                           size={20} 
-                          color={Colors.primary} 
+                          color={validationErrors.responses && showErrors && !formData.responses[index] ? '#dc3545' : Colors.primary} 
                           style={{ marginLeft: 8 }} 
                         />
                       </TouchableOpacity>
@@ -362,6 +453,14 @@ export default function BDIScreen() {
               </View>
             </View>
 
+            {/* Validation Error Display */}
+            {validationErrors.responses && showErrors && (
+              <View style={styles.errorContainer}>
+                <Ionicons name="alert-circle" size={20} color="#dc3545" />
+                <Text style={styles.errorText}>{validationErrors.responses}</Text>
+              </View>
+            )}
+
             {/* Submit Button */}
             <SubmitButton
               onPress={handleSubmit}
@@ -373,10 +472,27 @@ export default function BDIScreen() {
             />
           </View>
         </ScrollView>
+
+        {/* Loading Overlay */}
+        <LoadingOverlay
+          visible={isSubmitting}
+          message="Submitting BDI assessment..."
+        />
+
+        {/* Success Modal */}
+        <SuccessModal
+          visible={showSuccessModal}
+          title="Assessment Submitted!"
+          message="Your BDI assessment has been successfully submitted."
+          onClose={handleSuccessModalClose}
+          buttonText="Continue"
+        />
       </SafeAreaView>
     </AppBar>
   );
-}
+};
+
+export default BDIScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -489,6 +605,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
+  questionCardError: {
+    borderWidth: 2,
+    borderColor: '#dc3545',
+  },
   questionNumber: {
     fontSize: Fonts.sizes.regular,
     fontWeight: Fonts.weights.bold,
@@ -500,6 +620,10 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
     borderRadius: Layout.borderRadius.medium,
     backgroundColor: Colors.white,
+  },
+  dropdownContainerError: {
+    borderColor: '#dc3545',
+    borderWidth: 2,
   },
   dropdown: {
     padding: 14,
@@ -568,4 +692,20 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     fontWeight: Fonts.weights.bold,
   },
-}); 
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8d7da',
+    borderColor: '#dc3545',
+    borderWidth: 1,
+    borderRadius: Layout.borderRadius.medium,
+    padding: Layout.spacing.medium,
+    marginBottom: Layout.spacing.medium,
+  },
+  errorText: {
+    color: '#dc3545',
+    fontSize: Fonts.sizes.small,
+    marginTop: 4,
+    marginLeft: 4,
+  },
+});

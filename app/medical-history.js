@@ -1,12 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, SafeAreaView, Image, Alert, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Image as ExpoImage } from "expo-image";
+import FormSubmissionService from "../src/services/FormSubmissionService";
+
+// Import validation
+import { FormValidator } from "../src/utils/formValidation";
 
 // Import components
 import AppBar from "../src/components/AppBar";
 import SubmitButton from "../src/components/SubmitButton";
+import LoadingOverlay from "../src/components/LoadingOverlay";
+import SuccessModal from "../src/components/SuccessModal";
 
 // Import context
 import { useScrollViewPadding } from "../src/context/BottomNavContext";
@@ -28,7 +34,7 @@ const medicalConditions = [
   'SUBSTANCE ABUSE', 'FATIGUE', 'LOSS OF CONCENTRATION', 'RECURRENT THOUGHTS', 'SEXUAL PROBLEMS'
 ];
 
-export default function MedicalHistoryScreen() {
+const MedicalHistoryScreen = () => {
   const router = useRouter();
   const scrollViewPadding = useScrollViewPadding();
   const { animatedStyle } = useScreenAnimation();
@@ -43,11 +49,52 @@ export default function MedicalHistoryScreen() {
     legalCharges: '',
     legalExplanation: '',
     allergies: '',
+    familyHistory: '',
     signature: ''
   });
   
   const [isSubmitPressed, setIsSubmitPressed] = useState(false);
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [showErrors, setShowErrors] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Create refs for each section
+  const sectionRefs = {
+    medicalConditionsSection: useRef(null),
+    suicidalHistorySection: useRef(null),
+    allergiesSection: useRef(null),
+    familyHistorySection: useRef(null),
+    signatureSection: useRef(null)
+  };
+
+  // Add scrollView ref
+  const scrollViewRef = useRef(null);
+
+  // Helper function to get section ref based on field name
+  const getSectionRef = (fieldName) => {
+    const sectionMap = {
+      // Medical Conditions fields
+      medicalConditions: 'medicalConditionsSection',
+      
+      // Suicidal History fields
+      suicidalThoughts: 'suicidalHistorySection',
+      attempts: 'suicidalHistorySection',
+      suicidalExplanation: 'suicidalHistorySection',
+      
+      // Allergies fields
+      allergies: 'allergiesSection',
+      
+      // Family History fields
+      familyHistory: 'familyHistorySection',
+      
+      // Signature fields
+      signature: 'signatureSection'
+    };
+
+    return sectionRefs[sectionMap[fieldName]];
+  };
 
   const handleConditionChange = (condition, checked) => {
     setFormData(prev => ({
@@ -74,17 +121,105 @@ export default function MedicalHistoryScreen() {
     setOpenDropdownIndex(null);
   };
 
-  const handleSubmit = () => {
-    // Check required fields
-    if (!formData.suicidalThoughts || !formData.attempts) {
-      Alert.alert("Error", "Please answer all required questions.");
-      return;
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+
+    try {
+      setShowErrors(true);
+
+      // Validate form data
+      const errors = {};
+
+      // Validate medical conditions
+      if (!formData.medicalConditions || Object.keys(formData.medicalConditions).length === 0) {
+        errors.medicalConditions = "Please select at least one medical condition or mark 'None'";
+      }
+
+      // Validate suicidal history
+      if (!formData.suicidalThoughts) {
+        errors.suicidalThoughts = "Please indicate if you have had suicidal thoughts";
+      }
+      if (!formData.attempts) {
+        errors.attempts = "Please indicate if you have had any attempts";
+      }
+      if (formData.suicidalThoughts === 'Yes' && !formData.suicidalExplanation) {
+        errors.suicidalExplanation = "Please provide details about your suicidal thoughts";
+      }
+      if (formData.attempts === 'Yes' && !formData.suicidalExplanation) {
+        errors.suicidalExplanation = "Please provide details about your attempts";
+      }
+
+      // Validate allergies
+      if (!formData.allergies) {
+        errors.allergies = "Please list any allergies or indicate 'None'";
+      }
+
+      // Validate family history
+      if (!formData.familyHistory) {
+        errors.familyHistory = "Please provide family medical history or indicate 'None'";
+      }
+
+      // Validate signature
+      if (!formData.signature) {
+        errors.signature = "Please provide your signature to authorize this form";
+      }
+
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        const firstError = Object.values(errors)[0];
+        Alert.alert(
+          "Validation Error",
+          firstError,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                // Scroll to the first error
+                const firstErrorField = Object.keys(errors)[0];
+                const sectionRef = getSectionRef(firstErrorField);
+                if (sectionRef && sectionRef.current && scrollViewRef.current) {
+                  sectionRef.current.measureLayout(
+                    scrollViewRef.current,
+                    (x, y) => {
+                      scrollViewRef.current.scrollTo({ y, animated: true });
+                    },
+                    () => console.log('Failed to measure layout')
+                  );
+                }
+              }
+            }
+          ]
+        );
+        return;
+      }
+
+      // Clear validation errors and start submission
+      setValidationErrors({});
+      setIsSubmitting(true);
+
+      // Submit medical history using the service
+      const result = await FormSubmissionService.submitMedicalHistory(formData);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to submit medical history');
+      }
+
+      // Show success modal
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error('Error saving medical history:', error);
+      Alert.alert(
+        "Error",
+        error.message || "Failed to save medical history. Please try again.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Here you would typically send the data to your backend
-    Alert.alert("Success", "Medical history form submitted successfully!");
-    
-    // Navigate back or to next screen
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
     router.back();
   };
 
@@ -142,7 +277,10 @@ export default function MedicalHistoryScreen() {
   return (
     <AppBar>
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={scrollViewPadding}>
+        <ScrollView 
+          ref={scrollViewRef}
+          contentContainerStyle={scrollViewPadding}
+        >
           {/* Hero Section */}
           <View style={styles.heroSection}>
             <ExpoImage source={require("../assets/new-patient-hero.jpg")} style={styles.heroImage} />
@@ -160,9 +298,9 @@ export default function MedicalHistoryScreen() {
           {/* Form Content */}
           <View style={styles.formContainer}>
             {/* Medical Conditions Section */}
-            <View style={styles.section}>
+            <View ref={sectionRefs.medicalConditionsSection} style={styles.section}>
               <View style={styles.sectionTitleContainer}>
-                <Ionicons name="clipboard" size={20} color={Colors.primary} style={styles.sectionIcon} />
+                <Ionicons name="fitness" size={20} color={Colors.primary} style={styles.sectionIcon} />
                 <Text style={styles.sectionTitle}>Medical Conditions</Text>
               </View>
               <Text style={styles.instructionText}>Please check if you have a history of:</Text>
@@ -189,9 +327,9 @@ export default function MedicalHistoryScreen() {
             </View>
 
             {/* Suicidal History Section */}
-            <View style={styles.section}>
+            <View ref={sectionRefs.suicidalHistorySection} style={styles.section}>
               <View style={styles.sectionTitleContainer}>
-                <Ionicons name="warning" size={20} color={Colors.primary} style={styles.sectionIcon} />
+                <Ionicons name="alert-circle" size={20} color={Colors.primary} style={styles.sectionIcon} />
                 <Text style={styles.sectionTitle}>Suicidal History</Text>
               </View>
               
@@ -280,19 +418,43 @@ export default function MedicalHistoryScreen() {
             </View>
 
             {/* Allergies Section */}
-            <View style={styles.section}>
+            <View ref={sectionRefs.allergiesSection} style={styles.section}>
               <View style={styles.sectionTitleContainer}>
-                <Ionicons name="alert-circle" size={20} color={Colors.primary} style={styles.sectionIcon} />
+                <Ionicons name="medical" size={20} color={Colors.primary} style={styles.sectionIcon} />
                 <Text style={styles.sectionTitle}>Allergies</Text>
               </View>
               
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>List any allergies:</Text>
+                <Text style={styles.label}>Allergies *</Text>
                 <TextInput
                   style={[styles.textInput, styles.textArea]}
                   value={formData.allergies}
                   onChangeText={(value) => handleInputChange('allergies', value)}
-                  placeholder="List any known allergies"
+                  placeholder="List any allergies or indicate 'None'"
+                  placeholderTextColor="#666666"
+                  multiline={true}
+                  numberOfLines={4}
+                />
+                {validationErrors.allergies && showErrors && (
+                  <Text style={styles.errorText}>{validationErrors.allergies}</Text>
+                )}
+              </View>
+            </View>
+
+            {/* Family History Section */}
+            <View ref={sectionRefs.familyHistorySection} style={styles.section}>
+              <View style={styles.sectionTitleContainer}>
+                <Ionicons name="people" size={20} color={Colors.primary} style={styles.sectionIcon} />
+                <Text style={styles.sectionTitle}>Family History</Text>
+              </View>
+              
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Family Medical History: *</Text>
+                <TextInput
+                  style={[styles.textInput, styles.textArea]}
+                  value={formData.familyHistory}
+                  onChangeText={(value) => handleInputChange('familyHistory', value)}
+                  placeholder="List family medical history"
                   placeholderTextColor="#666666"
                   multiline={true}
                   numberOfLines={4}
@@ -312,14 +474,20 @@ export default function MedicalHistoryScreen() {
               </Text>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Signature of responsible party:</Text>
+                <Text style={styles.label}>Signature of responsible party: *</Text>
                 <TextInput
-                  style={styles.textInput}
+                  style={[
+                    styles.textInput,
+                    validationErrors.signature && showErrors && styles.textInputError
+                  ]}
                   value={formData.signature}
                   onChangeText={(value) => handleInputChange('signature', value)}
                   placeholder="Enter your full name to sign this form"
                   placeholderTextColor="#666666"
                 />
+                {validationErrors.signature && showErrors && (
+                  <Text style={styles.errorText}>{validationErrors.signature}</Text>
+                )}
               </View>
             </View>
 
@@ -334,10 +502,27 @@ export default function MedicalHistoryScreen() {
             />
           </View>
         </ScrollView>
+
+        {/* Loading Overlay */}
+        <LoadingOverlay
+          visible={isSubmitting}
+          message="Submitting medical history..."
+        />
+
+        {/* Success Modal */}
+        <SuccessModal
+          visible={showSuccessModal}
+          title="Medical History Submitted!"
+          message="Your medical history has been successfully submitted."
+          onClose={handleSuccessModalClose}
+          buttonText="Continue"
+        />
       </SafeAreaView>
     </AppBar>
   );
-}
+};
+
+export default MedicalHistoryScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -524,5 +709,13 @@ const styles = StyleSheet.create({
     borderRadius: Layout.borderRadius.medium,
     borderLeftWidth: 4,
     borderLeftColor: Colors.primary,
+  },
+  errorText: {
+    fontSize: Fonts.sizes.small,
+    color: Colors.error,
+    marginTop: 4,
+  },
+  textInputError: {
+    borderColor: Colors.error,
   },
 }); 

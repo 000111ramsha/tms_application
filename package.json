@@ -14,18 +14,24 @@
     "test": "jest"
   },
   "dependencies": {
+    "@craftzdog/react-native-buffer": "^6.1.0",
     "@emailjs/browser": "^4.4.1",
-    "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-native-async-storage/async-storage": "^2.1.2",
     "@react-native-community/datetimepicker": "8.3.0",
-    "@react-native-community/netinfo": "11.4.1",
-    "@supabase/supabase-js": "^2.49.8",
+    "@react-native-community/netinfo": "^11.4.1",
+    "@supabase/supabase-js": "^2.50.0",
+    "dotenv": "^16.5.0",
     "emailjs-com": "^3.2.0",
+    "events": "^3.3.0",
     "expo": "~53.0.9",
     "expo-constants": "~17.1.6",
+    "expo-file-system": "^18.1.10",
     "expo-haptics": "~14.1.4",
     "expo-image": "^2.1.7",
     "expo-linear-gradient": "^14.1.4",
+    "expo-print": "^14.1.4",
     "expo-router": "~5.0.7",
+    "expo-sharing": "^13.1.5",
     "expo-splash-screen": "^0.30.8",
     "expo-status-bar": "~2.2.3",
     "expo-updates": "~0.28.13",
@@ -34,13 +40,16 @@
     "react-native": "0.79.2",
     "react-native-drawer-layout": "^4.1.8",
     "react-native-gesture-handler": "~2.24.0",
+    "react-native-paper": "^5.14.5",
     "react-native-polyfill-globals": "^3.1.0",
+    "react-native-quick-crypto": "^0.7.14",
     "react-native-reanimated": "^3.17.5",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",
     "react-native-url-polyfill": "^2.0.0",
-    "react-native-webview": "13.13.5"
+    "react-native-webview": "13.13.5",
+    "readable-stream": "^4.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.27.4",
@@ -51,6 +60,7 @@
     "@types/react-native": "^0.72.8",
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-preset-expo": "~13.0.0",
+    "react-native-dotenv": "^3.4.11",
     "typescript": "~5.8.3"
   },
   "private": true

@@ -3,11 +3,17 @@ import { StyleSheet, View, Text, ScrollView, TouchableOpacity, SafeAreaView, Ima
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Image as ExpoImage } from "expo-image";
+import FormSubmissionService from "../src/services/FormSubmissionService";
+
+// Import validation
+import { FormValidator } from "../src/utils/formValidation";
 
 // Import components
 import AppBar from "../src/components/AppBar";
 import ModernDatePicker from "../src/components/ModernDatePicker";
 import SubmitButton from "../src/components/SubmitButton";
+import LoadingOverlay from "../src/components/LoadingOverlay";
+import SuccessModal from "../src/components/SuccessModal";
 
 // Import context
 import { useScrollViewPadding } from "../src/context/BottomNavContext";
@@ -85,7 +91,7 @@ const medicationCategories = {
   ]
 };
 
-export default function PreCertMedListScreen() {
+const PreCertMedListScreen = () => {
   const router = useRouter();
   const scrollViewPadding = useScrollViewPadding();
   const { animatedStyle } = useScreenAnimation();
@@ -98,6 +104,10 @@ export default function PreCertMedListScreen() {
   });
   
   const [isSubmitPressed, setIsSubmitPressed] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [showErrors, setShowErrors] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleMedicationToggle = (category, medication) => {
     const isCurrentlySelected = formData.selectedMedications[category]?.[medication];
@@ -156,16 +166,82 @@ export default function PreCertMedListScreen() {
     }));
   };
 
-  const handleSubmit = () => {
-    if (!formData.name.trim() || !formData.dateOfBirth) {
-      Alert.alert("Error", "Please fill in all required fields (Name and Date of Birth).");
-      return;
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      setShowErrors(true);
+
+      // Validate that at least one medication is selected
+      const hasSelectedMedications = Object.values(formData.selectedMedications).some(
+        category => Object.values(category).some(med => med)
+      );
+
+      if (!hasSelectedMedications) {
+        Alert.alert(
+          "Validation Error",
+          "Please select at least one medication.",
+          [{ text: "OK" }]
+        );
+        return;
+      }
+
+      // Format the data for submission
+      const submissionData = {
+        name: formData.name,
+        dateOfBirth: formData.dateOfBirth,
+        medications: {}
+      };
+
+      // Process each medication category
+      Object.entries(formData.selectedMedications).forEach(([category, medications]) => {
+        submissionData.medications[category] = {};
+        Object.entries(medications).forEach(([medName, isSelected]) => {
+          if (isSelected) {
+            const medicationKey = `${category}_${medName}`;
+            const details = formData.medicationDetails[medicationKey] || {};
+            
+            // Clean up medication name to match database column names
+            const cleanMedName = medName
+              .replace(/[()]/g, '')  // Remove parentheses
+              .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+              .trim();               // Remove leading/trailing spaces
+
+            submissionData.medications[category][cleanMedName] = {
+              selected: true,
+              dosage: details.dose || null,
+              startDate: details.startDate || null,
+              endDate: details.endDate || null,
+              reasonForDiscontinuing: details.reasonForDiscontinuing || null
+            };
+        }
+      });
+      });
+
+      // Submit the form
+      const result = await FormSubmissionService.submitPreCertMedList(submissionData);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // Show success modal
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error('Error saving pre-cert medication list:', error);
+      Alert.alert(
+        "Error",
+        "Failed to save pre-cert medication list. Please try again.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Here you would typically send the data to your backend
-    Alert.alert("Success", "Pre-Certification Medication List submitted successfully!");
-    
-    // Navigate back or to next screen
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
     router.back();
   };
 
@@ -324,10 +400,27 @@ export default function PreCertMedListScreen() {
             />
           </View>
         </ScrollView>
+
+        {/* Loading Overlay */}
+        <LoadingOverlay
+          visible={isSubmitting}
+          message="Submitting medication list..."
+        />
+
+        {/* Success Modal */}
+        <SuccessModal
+          visible={showSuccessModal}
+          title="Medication List Submitted!"
+          message="Your pre-certification medication list has been successfully submitted."
+          onClose={handleSuccessModalClose}
+          buttonText="Continue"
+        />
       </SafeAreaView>
     </AppBar>
   );
-}
+};
+
+export default PreCertMedListScreen;
 
 const styles = StyleSheet.create({
   container: {

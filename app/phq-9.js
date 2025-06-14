@@ -1,12 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, SafeAreaView, Image, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Image as ExpoImage } from "expo-image";
+import FormSubmissionService from "../src/services/FormSubmissionService";
+
+// Import validation
+import { FormValidator } from "../src/utils/formValidation";
 
 // Import components
 import AppBar from "../src/components/AppBar";
 import SubmitButton from "../src/components/SubmitButton";
+import LoadingOverlay from "../src/components/LoadingOverlay";
+import SuccessModal from "../src/components/SuccessModal";
 
 // Import context
 import { useScrollViewPadding } from "../src/context/BottomNavContext";
@@ -40,17 +46,22 @@ const phqOptions = [
   { label: "3. Nearly every day", value: "3" }
 ];
 
-export default function PHQ9Screen() {
+const PHQ9Screen = () => {
   const router = useRouter();
   const scrollViewPadding = useScrollViewPadding();
   const { animatedStyle } = useScreenAnimation();
+  const scrollViewRef = useRef(null);
   
   const [formData, setFormData] = useState({
     responses: {}
   });
-  
+
   const [isSubmitPressed, setIsSubmitPressed] = useState(false);
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [showErrors, setShowErrors] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Calculate total score
   const calculateTotalScore = () => {
@@ -72,26 +83,87 @@ export default function PHQ9Screen() {
         [questionIndex]: value
       }
     }));
+
+    // Clear validation errors when user makes a selection
+    if (validationErrors.responses) {
+      setValidationErrors(prev => ({
+        ...prev,
+        responses: ''
+      }));
+    }
   };
 
-  const handleSubmit = () => {
-    // Check if all questions are answered
-    const unansweredQuestions = [];
-    for (let i = 0; i < phqQuestions.length; i++) {
-      if (!formData.responses[i] || formData.responses[i] === "Select") {
-        unansweredQuestions.push(i + 1);
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+
+    try {
+      setShowErrors(true);
+
+      // Validate responses using FormValidator
+      const validation = FormValidator.validateAssessmentResponses(formData.responses, phqQuestions.length);
+
+      if (!validation.isValid) {
+        setValidationErrors({ responses: validation.error });
+        
+        // Scroll to the first unanswered question
+        if (validation.unansweredQuestions.length > 0) {
+          const firstUnansweredIndex = validation.unansweredQuestions[0] - 1;
+          const questionRef = questionRefs.current[firstUnansweredIndex];
+          if (questionRef && scrollViewRef.current) {
+            questionRef.measureLayout(
+              scrollViewRef.current,
+              (x, y) => {
+                scrollViewRef.current.scrollTo({ y, animated: true });
+              },
+              () => console.log('Failed to measure layout')
+            );
+          }
+        }
+
+        Alert.alert(
+          "Validation Error",
+          validation.error,
+          [{ text: "OK" }]
+        );
+        return;
       }
+
+      // Clear validation errors and start submission
+      setValidationErrors({});
+      setIsSubmitting(true);
+
+      const totalScore = calculateTotalScore();
+
+      // Submit PHQ-9 screening using the new service
+      const result = await FormSubmissionService.submitPHQ9Screening({
+        totalScore: totalScore,
+        responses: formData.responses
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // Show success modal
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error('Error saving PHQ-9 responses:', error);
+      Alert.alert("Error", "Failed to save PHQ-9 screening. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    if (unansweredQuestions.length > 0) {
-      Alert.alert("Error", `Please answer all questions. Missing responses for question(s): ${unansweredQuestions.join(", ")}`);
-      return;
-    }
-    
-    // Here you would typically send the data to your backend
-    Alert.alert("Success", "PHQ-9 questionnaire submitted successfully!");
-    
-    // Navigate back or to next screen
+  };
+
+  // Create refs for each question
+  const questionRefs = useRef([]);
+
+  // Initialize refs array
+  useEffect(() => {
+    questionRefs.current = questionRefs.current.slice(0, phqQuestions.length);
+  }, []);
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
     router.back();
   };
 
@@ -102,7 +174,10 @@ export default function PHQ9Screen() {
   return (
     <AppBar>
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={scrollViewPadding}>
+        <ScrollView 
+          ref={scrollViewRef}
+          contentContainerStyle={scrollViewPadding}
+        >
           {/* Hero Section */}
           <View style={styles.heroSection}>
             <ExpoImage source={require("../assets/new-patient-hero.jpg")} style={styles.heroImage} />
@@ -128,10 +203,20 @@ export default function PHQ9Screen() {
                 const displayText = selectedOption ? selectedOption.label : "Select";
                 
                 return (
-                  <View key={index} style={styles.questionCard}>
+                  <View 
+                    key={index} 
+                    ref={el => questionRefs.current[index] = el}
+                    style={[
+                      styles.questionCard,
+                      validationErrors.responses && showErrors && !formData.responses[index] && styles.questionCardError
+                    ]}
+                  >
                     <Text style={styles.questionNumber}>{index + 1}. {question}</Text>
                     
-                    <View style={styles.dropdownContainer}>
+                    <View style={[
+                      styles.dropdownContainer,
+                      validationErrors.responses && showErrors && !formData.responses[index] && styles.dropdownContainerError
+                    ]}>
                       <TouchableOpacity
                         style={styles.dropdown}
                         onPress={() => setOpenDropdownIndex(isOpen ? null : index)}
@@ -142,7 +227,7 @@ export default function PHQ9Screen() {
                         <Ionicons 
                           name={isOpen ? "chevron-up" : "chevron-down"} 
                           size={20} 
-                          color={Colors.primary} 
+                          color={validationErrors.responses && showErrors && !formData.responses[index] ? '#dc3545' : Colors.primary} 
                           style={{ marginLeft: 8 }} 
                         />
                       </TouchableOpacity>
@@ -191,10 +276,27 @@ export default function PHQ9Screen() {
             />
           </View>
         </ScrollView>
+
+        {/* Loading Overlay */}
+        <LoadingOverlay
+          visible={isSubmitting}
+          message="Submitting PHQ-9 screening..."
+        />
+
+        {/* Success Modal */}
+        <SuccessModal
+          visible={showSuccessModal}
+          title="Screening Submitted!"
+          message="Your PHQ-9 screening has been successfully submitted."
+          onClose={handleSuccessModalClose}
+          buttonText="Continue"
+        />
       </SafeAreaView>
     </AppBar>
   );
-}
+};
+
+export default PHQ9Screen;
 
 const styles = StyleSheet.create({
   container: {
@@ -263,6 +365,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
+  questionCardError: {
+    borderWidth: 2,
+    borderColor: '#dc3545',
+  },
   questionNumber: {
     fontSize: Fonts.sizes.regular,
     fontWeight: Fonts.weights.bold,
@@ -274,6 +380,10 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
     borderRadius: Layout.borderRadius.medium,
     backgroundColor: Colors.white,
+  },
+  dropdownContainerError: {
+    borderColor: '#dc3545',
+    borderWidth: 2,
   },
   dropdown: {
     padding: 14,
@@ -288,6 +398,12 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     color: '#999',
+  },
+  errorText: {
+    color: '#dc3545',
+    fontSize: Fonts.sizes.small,
+    marginTop: 4,
+    marginLeft: 4,
   },
   dropdownOptions: {
     maxHeight: 200,
