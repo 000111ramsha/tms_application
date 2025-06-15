@@ -61,9 +61,8 @@ export const preloadScreenImages = async (screenName) => {
   try {
     // For local assets, they're bundled and ready immediately
     // expo-image will handle optimized loading and caching
-    console.log(`${screenName} screen images (${imageCount} assets) are bundled and ready for optimized loading`);
   } catch (error) {
-    console.warn(`Failed to initialize ${screenName} screen images:`, error);
+    // Silent fail for production
   }
 };
 
@@ -97,9 +96,8 @@ export const preloadRemoteImages = async (imageUrls, priority = 'normal') => {
 export const clearImageCache = async () => {
   try {
     await Image.clearMemoryCache();
-    console.log('Image memory cache cleared');
   } catch (error) {
-    console.warn('Failed to clear image cache:', error);
+    // Silent fail for production
   }
 };
 
@@ -109,9 +107,8 @@ export const clearImageCache = async () => {
 export const clearDiskCache = async () => {
   try {
     await Image.clearDiskCache();
-    console.log('Image disk cache cleared');
   } catch (error) {
-    console.warn('Failed to clear disk cache:', error);
+    // Silent fail for production
   }
 };
 

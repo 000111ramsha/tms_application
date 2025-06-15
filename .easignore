@@ -12,13 +12,7 @@ node_modules/
 
 # Documentation and README files
 *.md
-GRADLE_BUILD_TROUBLESHOOTING.md
-NETWORK_PERFORMANCE_IMPROVEMENTS.md
-IMAGE_OPTIMIZATION_README.md
-HOMESCREEN_IMPROVEMENTS.md
-FADE_TRANSITION_IMPLEMENTATION.md
-ERROR_FIXES.md
-DATE_PICKER_IMPLEMENTATION.md
+*.sql
 
 # IDE files
 .vscode/
@@ -30,6 +24,19 @@ DATE_PICKER_IMPLEMENTATION.md
 thumbs.db
 *.tmp
 *.temp
+*.log
 
 # Cache directories
-android/app/.cxx/ 
+android/app/.cxx/
+.metro-health-check*
+
+# Development files
+.env.local
+.env.development
+*.test.js
+*.spec.js
+__tests__/
+
+# Source maps and debug files
+*.map
+*.debug.js

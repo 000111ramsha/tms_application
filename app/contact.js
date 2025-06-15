@@ -336,7 +336,7 @@ export default function ContactScreen() {
         throw new Error(responseData.message || "Failed to send email via Resend.");
       }
 
-      console.log('Message sent and email delivered via Resend:', responseData);
+      // Message sent successfully
       
       Alert.alert("Message Sent", "Thank you for contacting us. We will get back to you soon!", [
         {
@@ -348,7 +348,6 @@ export default function ContactScreen() {
         },
       ]);
     } catch (error) {
-      console.error('Message sending error:', error);
       Alert.alert("Error", `Failed to send message: ${error.message || 'Please try again.'}`);
     } finally {
       setIsSubmitting(false);

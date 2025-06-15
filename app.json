@@ -42,8 +42,7 @@
           "backgroundColor": "#ffffff",
           "imageWidth": 150
         }
-      ],
-      "expo-video"
+      ]
     ],
     "extra": {
       "router": {},
@@ -51,9 +50,6 @@
         "projectId": "aec7ddf4-9474-4131-9a9a-4b9309bf4176"
       }
     },
-    "runtimeVersion": "1.0.0",
-    "updates": {
-      "url": "https://u.expo.dev/aec7ddf4-9474-4131-9a9a-4b9309bf4176"
-    }
+    "runtimeVersion": "1.0.0"
   }
 }

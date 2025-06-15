@@ -435,8 +435,6 @@ class FormSubmissionService {
         return { success: true, data: result };
       } catch (error) {
         // Handle submission error
-        console.error('Form submission error:', error);
-        
         // Save failed submission for retry
         await OfflineStorageService.addPendingSubmission(formType, formData);
         
@@ -449,7 +447,6 @@ class FormSubmissionService {
         return { success: false, error: error.message };
       }
     } catch (error) {
-      console.error('Form submission service error:', error);
       Alert.alert(
         'Error',
         'An unexpected error occurred. Please try again.',

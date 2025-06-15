@@ -97,7 +97,7 @@ export const cacheMapImage = async (style, location, url, size = '600x300') => {
     await cleanupOldCache();
     
   } catch (error) {
-    console.warn('Failed to cache map image:', error);
+    // Silent fail for production
   }
 };
 
@@ -128,7 +128,7 @@ const cleanupOldCache = async () => {
       await AsyncStorage.multiRemove(keysToRemove);
     }
   } catch (error) {
-    console.warn('Failed to cleanup old cache:', error);
+    // Silent fail for production
   }
 };
 
@@ -140,7 +140,6 @@ export const checkNetworkConnectivity = async () => {
     const netInfo = await NetInfo.fetch();
     return netInfo.isConnected && netInfo.isInternetReachable;
   } catch (error) {
-    console.warn('Failed to check network connectivity:', error);
     return false;
   }
 };
@@ -231,10 +230,9 @@ export const clearMapCache = async () => {
     
     if (mapboxKeys.length > 0) {
       await AsyncStorage.multiRemove(mapboxKeys);
-      console.log('Map cache cleared');
     }
   } catch (error) {
-    console.warn('Failed to clear map cache:', error);
+    // Silent fail for production
   }
 };
 

@@ -55,16 +55,9 @@ const OptimizedMapbox = ({
       setMapData(result);
       setIsOnline(!result.offline);
       
-      if (result.offline && !result.fromCache) {
-        console.log('Map is offline, showing fallback');
-      } else if (result.fromCache) {
-        console.log('Map loaded from cache');
-      } else {
-        console.log('Map loaded from network');
-      }
+      // Map loaded successfully
       
     } catch (error) {
-      console.warn('Failed to load map:', error);
       setMapData({
         url: null,
         fromCache: false,

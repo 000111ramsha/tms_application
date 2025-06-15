@@ -371,7 +371,7 @@ export default function HomeScreen() {
         throw new Error(responseData.message || "Failed to send email via Resend.");
       }
 
-      console.log('Form submitted and email sent via Resend:', responseData);
+      // Form submitted successfully
 
       // Success feedback
       try {
