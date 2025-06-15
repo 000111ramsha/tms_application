@@ -27,7 +27,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.ramsha_malik.tms_app"
+      "package": "com.emrald.tms"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
