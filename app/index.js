@@ -15,6 +15,7 @@ import {
   Animated,
   ImageBackground,
   Platform,
+  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -37,6 +38,7 @@ import { useScrollViewPadding } from "../src/context/BottomNavContext";
 // Import hooks
 import { useResponsiveDimensions } from "../src/hooks/useResponsiveDimensions";
 import { useFormReducer } from "../src/hooks/useFormReducer";
+import { useScreenAnimation } from "../src/hooks/useScreenAnimation";
 
 // Import constants
 import Colors from "../src/constants/Colors";
@@ -47,38 +49,66 @@ import Spacing from "../src/constants/Spacing";
 // Import utils
 import { validateEmail } from "../src/utils/validation";
 
-/**
- * Home Screen Component - Enhanced with better UX and performance
- */
-export default function HomeScreen() {
-  const router = useRouter();
-  const scrollViewPadding = useScrollViewPadding();
-  const { window: dimensions, isTablet, isMobile, isSmallDevice } = useResponsiveDimensions();
+// Constants
+const FAQ_ITEMS = [
+  {
+    question: "Is TMS Therapy Painful?",
+    answer: "No, TMS therapy is generally not painful. Most patients describe a tapping or knocking sensation on their scalp during treatment. Some may experience mild discomfort that typically subsides after the first few sessions.",
+  },
+  {
+    question: "How Long Does TMS Treatment Session Last?",
+    answer: "A typical TMS treatment session lasts about 20-40 minutes. The full course of treatment usually involves 5 sessions per week for 4-6 weeks, totaling 20-30 sessions.",
+  },
+  {
+    question: "Are There Any Side Effects of TMS Therapy?",
+    answer: "TMS is well-tolerated. The most common side effect is mild scalp discomfort or headache, which usually resolves after a few sessions.",
+  },
+  {
+    question: "Will My Insurance Cover TMS?",
+    answer: "Many insurance providers now cover TMS therapy for patients who have not responded to traditional depression treatments. Our staff will work with you to verify your coverage and explain any out-of-pocket costs.",
+  },
+  {
+    question: "How Long Will The Effects of TMS Therapy Last?",
+    answer: "The effects of TMS therapy can last for months to years. Some patients experience long-term relief after a single course of treatment, while others may benefit from occasional maintenance sessions.",
+  },
+  {
+    question: "Can TMS Therapy Be Combined with Medication?",
+    answer: "Yes, TMS therapy can be used alongside medication. In fact, many patients continue their current medications during TMS treatment. Your doctor will provide guidance on your specific treatment plan.",
+  },
+];
 
-  // Loading and refresh states
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+// Custom hooks
+const usePulseAnimation = () => {
+  const pulseAnim1 = useMemo(() => new Animated.Value(0), []);
+  const pulseAnim2 = useMemo(() => new Animated.Value(0), []);
 
-  // Video modal state
-  const [isVideoModalVisible, setIsVideoModalVisible] = useState(false);
-
-  // Animation values for smooth transitions (optional)
-  const fadeAnim = useState(new Animated.Value(1))[0]; // Start with 1 (visible)
-  const slideAnim = useState(new Animated.Value(0))[0]; // Start with 0 (in position)
-
-  // Optional: Add subtle entrance animation on mount
   useEffect(() => {
-    // Only animate if desired - content is immediately available
-    if (fadeAnim._value !== 1) {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [fadeAnim]);
+    const createPulseAnimation = (anim) => {
+      return Animated.sequence([
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 3000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(anim, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ]);
+    };
 
-  // Use form reducer for better state management
+    Animated.loop(createPulseAnimation(pulseAnim1)).start();
+    setTimeout(() => {
+      Animated.loop(createPulseAnimation(pulseAnim2)).start();
+    }, 1500);
+  }, [pulseAnim1, pulseAnim2]);
+
+  return { pulseAnim1, pulseAnim2 };
+};
+
+const useFormState = () => {
   const {
     fields,
     errors,
@@ -90,78 +120,83 @@ export default function HomeScreen() {
     resetForm,
     setPressedState,
   } = useFormReducer(
-    // Initial fields
     {
       name: "",
       email: "",
-      date: null, // Changed to null for date object
+      date: null,
       consultationType: "Consultation",
     },
-    // Initial errors
     {
       name: "",
       email: "",
       date: "",
       consultationType: "",
     },
-    // Initial pressed states
     {
       learnMore: false,
       contactForm: false,
     }
   );
 
-  // Separate state for UI elements that don't belong in the form
+  return {
+    fields,
+    errors,
+    pressedStates,
+    setField,
+    setError,
+    clearError,
+    clearAllErrors,
+    resetForm,
+    setPressedState,
+  };
+};
+
+/**
+ * Home Screen Component - Enhanced with better UX and performance
+ */
+export default function HomeScreen() {
+  const router = useRouter();
+  const scrollViewPadding = useScrollViewPadding();
+  const { window: dimensions, isTablet, isMobile, isSmallDevice } = useResponsiveDimensions();
+
+  // State management
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVideoModalVisible, setIsVideoModalVisible] = useState(false);
   const [showConsultationOptions, setShowConsultationOptions] = useState(false);
 
-  // Memoized FAQ items for better performance
-  const faqItems = useMemo(() => [
-    {
-      question: "Is TMS Therapy Painful?",
-      answer:
-        "No, TMS therapy is generally not painful. Most patients describe a tapping or knocking sensation on their scalp during treatment. Some may experience mild discomfort that typically subsides after the first few sessions.",
-    },
-    {
-      question: "How Long Does TMS Treatment Session Last?",
-      answer:
-        "A typical TMS treatment session lasts about 20-40 minutes. The full course of treatment usually involves 5 sessions per week for 4-6 weeks, totaling 20-30 sessions.",
-    },
-    {
-      question: "Are There Any Side Effects of TMS Therapy?",
-      answer:
-        "TMS is well-tolerated. The most common side effect is mild scalp discomfort or headache, which usually resolves after a few sessions.",
-    },
-    {
-      question: "Will My Insurance Cover TMS?",
-      answer:
-        "Many insurance providers now cover TMS therapy for patients who have not responded to traditional depression treatments. Our staff will work with you to verify your coverage and explain any out-of-pocket costs.",
-    },
-    {
-      question: "How Long Will The Effects of TMS Therapy Last?",
-      answer:
-        "The effects of TMS therapy can last for months to years. Some patients experience long-term relief after a single course of treatment, while others may benefit from occasional maintenance sessions.",
-    },
-    {
-      question: "Can TMS Therapy Be Combined with Medication?",
-      answer:
-        "Yes, TMS therapy can be used alongside medication. In fact, many patients continue their current medications during TMS treatment. Your doctor will provide guidance on your specific treatment plan.",
-    },
-  ], []);
+  // Custom hooks
+  const { pulseAnim1, pulseAnim2 } = usePulseAnimation();
+  const { animatedStyle } = useScreenAnimation(400);
+  const formState = useFormState();
+
+  // Animation values
+  const fadeAnim = useState(new Animated.Value(1))[0];
+  const slideAnim = useState(new Animated.Value(0))[0];
+
+  // Entrance animation
+  useEffect(() => {
+    if (fadeAnim._value !== 1) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [fadeAnim]);
 
   // Optimized refresh functionality
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      // Reset form if needed
-      clearAllErrors();
-      // Remove image preloading delay for faster refresh
+      formState.clearAllErrors();
     } catch (error) {
       console.error('Error refreshing:', error);
       Alert.alert('Error', 'Failed to refresh content.');
     } finally {
       setIsRefreshing(false);
     }
-  }, [clearAllErrors]);
+  }, [formState.clearAllErrors]);
 
   // Enhanced contact handlers with better error handling
   const handleCall = useCallback(() => {
@@ -193,15 +228,15 @@ export default function HomeScreen() {
     let valid = true;
     const newErrors = {};
 
-    if (!fields.name.trim()) {
+    if (!formState.fields.name.trim()) {
       newErrors.name = "Please enter your name";
       valid = false;
-    } else if (fields.name.trim().length < 2) {
+    } else if (formState.fields.name.trim().length < 2) {
       newErrors.name = "Name must be at least 2 characters";
       valid = false;
     }
 
-    if (!fields.date) {
+    if (!formState.fields.date) {
       newErrors.date = "Please select your preferred date";
       valid = false;
     } else {
@@ -209,7 +244,7 @@ export default function HomeScreen() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const selectedDate = new Date(fields.date);
+      const selectedDate = new Date(formState.fields.date);
       selectedDate.setHours(0, 0, 0, 0);
 
       if (selectedDate <= today) {
@@ -218,27 +253,27 @@ export default function HomeScreen() {
       }
     }
 
-    if (!fields.email.trim()) {
+    if (!formState.fields.email.trim()) {
       newErrors.email = "Please enter your email";
       valid = false;
-    } else if (!validateEmail(fields.email.trim())) {
+    } else if (!validateEmail(formState.fields.email.trim())) {
       newErrors.email = "Please enter a valid email address";
       valid = false;
     }
 
-    if (!fields.consultationType || fields.consultationType === "") {
+    if (!formState.fields.consultationType || formState.fields.consultationType === "") {
       newErrors.consultationType = "Please select a consultation type";
       valid = false;
     }
 
     // Set all errors at once for better UX
-    Object.keys(newErrors).forEach(key => setError(key, newErrors[key]));
-    Object.keys(errors).forEach(key => {
-      if (!newErrors[key]) clearError(key);
+    Object.keys(newErrors).forEach(key => formState.setError(key, newErrors[key]));
+    Object.keys(formState.errors).forEach(key => {
+      if (!newErrors[key]) formState.clearError(key);
     });
 
     return valid;
-  }, [fields, errors, setError, clearError]);
+  }, [formState.fields, formState.errors, formState.setError, formState.clearError]);
 
   // Enhanced form submission with loading states and better feedback
   const handleContactSubmit = useCallback(async () => {
@@ -261,8 +296,8 @@ export default function HomeScreen() {
       const senderEmail = "onboarding@resend.dev"; // For production, use your verified domain
       const resendApiKey = "re_a6sV9E4m_7z2rZVBbLQpkxbuqdLCam3DR"; // IMPORTANT: Replace with your actual Resend API key
 
-      const preferredDateFormatted = fields.date
-        ? new Date(fields.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+      const preferredDateFormatted = formState.fields.date
+        ? new Date(formState.fields.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
         : 'Not specified';
 
       const submissionTime = new Date().toLocaleString('en-US', {
@@ -308,11 +343,11 @@ export default function HomeScreen() {
     <div class="content">
       <div class="field-block">
         <label>Patient Name:</label>
-        <div class="value">${fields.name}</div>
+        <div class="value">${formState.fields.name}</div>
       </div>
       <div class="field-block">
         <label>Email Address:</label>
-        <div class="value"><a href="mailto:${fields.email.trim()}">${fields.email.trim()}</a></div>
+        <div class="value"><a href="mailto:${formState.fields.email.trim()}">${formState.fields.email.trim()}</a></div>
       </div>
       <div class="field-block">
         <label>Preferred Date:</label>
@@ -320,7 +355,7 @@ export default function HomeScreen() {
       </div>
       <div class="field-block">
         <label>Consultation Type:</label>
-        <div class="value">${fields.consultationType}</div>
+        <div class="value">${formState.fields.consultationType}</div>
       </div>
       <div class="field-block">
         <label>Submission Time:</label>
@@ -330,14 +365,6 @@ export default function HomeScreen() {
         <label>Source:</label>
         <div class="value">Home Screen Form</div>
       </div>
-    </div>
-    <div class="next-steps">
-      <h3>Next Steps:</h3>
-      <ul>
-        <li>Contact the patient within 24 hours</li>
-        <li>Schedule their preferred consultation type</li>
-        <li>Send intake forms if needed</li>
-      </ul>
     </div>
   </div>
   <div class="footer">
@@ -350,9 +377,9 @@ export default function HomeScreen() {
       const emailData = {
         from: `"${senderName}" <${senderEmail}>`,
         to: [adminEmail],
-        subject: `New Message Submission from ${fields.name}`,
+        subject: `New Message Submission from ${formState.fields.name}`,
         html: htmlBody,
-        reply_to: fields.email.trim(),
+        reply_to: formState.fields.email.trim(),
       };
 
       const response = await fetch("https://api.resend.com/emails", {
@@ -387,7 +414,7 @@ export default function HomeScreen() {
         [{ text: "OK", style: "default" }]
       );
 
-      resetForm();
+      formState.resetForm();
       setShowConsultationOptions(false);
 
     } catch (error) {
@@ -403,7 +430,7 @@ export default function HomeScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [validateForm, fields, resetForm, handleCall]);
+  }, [validateForm, formState, setShowConsultationOptions, handleCall]);
 
   // Enhanced navigation with loading states
   const handleLearnMore = useCallback(() => {
@@ -424,10 +451,7 @@ export default function HomeScreen() {
         <Animated.View
           style={[
             styles.animatedContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
+            animatedStyle
           ]}
         >
           <ScrollView
@@ -531,7 +555,7 @@ export default function HomeScreen() {
                 <Pressable
                   style={styles.heroFormSection}
                   onPress={() => {
-                    clearAllErrors();
+                    formState.clearAllErrors();
                     Keyboard.dismiss();
                   }}
                 >
@@ -540,12 +564,12 @@ export default function HomeScreen() {
                   </Text>
 
                   <TextInput
-                    style={[styles.heroFormInput, errors.name ? styles.heroFormInputError : null]}
+                    style={[styles.heroFormInput, formState.errors.name ? styles.heroFormInputError : null]}
                     placeholder="Your Name"
-                    value={fields.name}
-                    onChangeText={(value) => setField("name", value)}
+                    value={formState.fields.name}
+                    onChangeText={(value) => formState.setField("name", value)}
                     placeholderTextColor="#bdbdbd"
-                    onFocus={() => clearError("name")}
+                    onFocus={() => formState.clearError("name")}
                     accessibilityLabel="Your Name"
                     accessibilityHint="Enter your full name"
                     autoCapitalize="words"
@@ -556,15 +580,15 @@ export default function HomeScreen() {
                       // Focus will move to next input automatically
                     }}
                   />
-                  {errors.name ? (
+                  {formState.errors.name ? (
                     <View style={styles.heroFormErrorContainer}>
                       <Ionicons name="alert-circle" size={14} color={Colors.error} style={styles.heroFormErrorIcon} />
-                      <Text style={styles.heroFormError}>{errors.name}</Text>
+                      <Text style={styles.heroFormError}>{formState.errors.name}</Text>
                     </View>
                   ) : null}
 
                   <ModernDatePicker
-                    value={fields.date}
+                    value={formState.fields.date}
                     onDateChange={(date) => {
                       // Validate date for home form
                       const today = new Date();
@@ -574,17 +598,17 @@ export default function HomeScreen() {
                       selectedDate.setHours(0, 0, 0, 0);
                       
                       if (selectedDate <= today) {
-                        setError("date", "Please select a future date");
+                        formState.setError("date", "Please select a future date");
                         return;
                       }
                       
-                      setField("date", date);
-                      if (errors.date) validateDateField(date);
+                      formState.setField("date", date);
+                      if (formState.errors.date) validateDateField(date);
                     }}
                     placeholder="Select Preferred Date"
-                    error={errors.date}
-                    onFocus={() => clearError("date")}
-                    onBlur={() => validateDateField(fields.date)}
+                    error={formState.errors.date}
+                    onFocus={() => formState.clearError("date")}
+                    onBlur={() => validateDateField(formState.fields.date)}
                     style={styles.heroFormDatePicker}
                     placeholderTextColor="#666"
                     textColor="#222"
@@ -593,38 +617,38 @@ export default function HomeScreen() {
                   />
 
                   <TextInput
-                    style={[styles.heroFormInput, errors.email ? styles.heroFormInputError : null]}
+                    style={[styles.heroFormInput, formState.errors.email ? styles.heroFormInputError : null]}
                     placeholder="Your Email"
-                    value={fields.email}
-                    onChangeText={(value) => setField("email", value)}
+                    value={formState.fields.email}
+                    onChangeText={(value) => formState.setField("email", value)}
                     placeholderTextColor="#bdbdbd"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
-                    onFocus={() => clearError("email")}
+                    onFocus={() => formState.clearError("email")}
                     accessibilityLabel="Your Email"
                     accessibilityHint="Enter your email address"
                     maxLength={100}
                     returnKeyType="done"
                   />
-                  {errors.email ? (
+                  {formState.errors.email ? (
                     <View style={styles.heroFormErrorContainer}>
                       <Ionicons name="alert-circle" size={14} color={Colors.error} style={styles.heroFormErrorIcon} />
-                      <Text style={styles.heroFormError}>{errors.email}</Text>
+                      <Text style={styles.heroFormError}>{formState.errors.email}</Text>
                     </View>
                   ) : null}
 
                   <TouchableButton
-                    style={[styles.heroFormDropdown, errors.consultationType ? styles.heroFormInputError : null]}
+                    style={[styles.heroFormDropdown, formState.errors.consultationType ? styles.heroFormInputError : null]}
                     onPress={() => setShowConsultationOptions(!showConsultationOptions)}
-                    onPressIn={() => clearError("consultationType")}
+                    onPressIn={() => formState.clearError("consultationType")}
                     accessibility={{
                       label: "Consultation Type",
                       hint: "Select type of consultation",
                       state: { expanded: showConsultationOptions }
                     }}
                   >
-                    <Text style={styles.heroFormDropdownText}>{fields.consultationType}</Text>
+                    <Text style={styles.heroFormDropdownText}>{formState.fields.consultationType}</Text>
                     <Ionicons
                       name={showConsultationOptions ? "chevron-up" : "chevron-down"}
                       size={20}
@@ -640,7 +664,7 @@ export default function HomeScreen() {
                           key={option}
                           style={styles.heroFormDropdownOption}
                           onPress={() => {
-                            setField("consultationType", option);
+                            formState.setField("consultationType", option);
                             setShowConsultationOptions(false);
                           }}
                           accessibility={{
@@ -653,18 +677,18 @@ export default function HomeScreen() {
                     </View>
                   )}
 
-                  {errors.consultationType ? (
+                  {formState.errors.consultationType ? (
                     <View style={styles.heroFormErrorContainer}>
                       <Ionicons name="alert-circle" size={14} color={Colors.error} style={styles.heroFormErrorIcon} />
-                      <Text style={styles.heroFormError}>{errors.consultationType}</Text>
+                      <Text style={styles.heroFormError}>{formState.errors.consultationType}</Text>
                     </View>
                   ) : null}
 
                   <SubmitButton
                     onPress={handleContactSubmit}
-                    onPressIn={() => setPressedState("contactForm", true)}
-                    onPressOut={() => setPressedState("contactForm", false)}
-                    isPressed={pressedStates.contactForm}
+                    onPressIn={() => formState.setPressedState("contactForm", true)}
+                    onPressOut={() => formState.setPressedState("contactForm", false)}
+                    isPressed={formState.pressedStates.contactForm}
                     isSubmitting={isSubmitting}
                     disabled={isSubmitting}
                     title="CONTACT US"
@@ -690,7 +714,7 @@ export default function HomeScreen() {
                 accessibilityRole="header"
                 accessibilityLevel={2}
               >
-                Be Part Of The 4 In 5 Patients Experiencing Relief With TMS.
+                Be Part Of The <Text style={{ color: '#000000' }}>4 in 5</Text> Patients Experiencing Relief With TMS.
               </Text>
               <View style={styles.tmsInfoSubheadingRow}>
                 <View style={styles.tmsInfoBullet} />
@@ -724,6 +748,51 @@ export default function HomeScreen() {
                     size={18}
                     color={Colors.white}
                     style={styles.tmsInfoButtonIcon}
+                  />
+                </TouchableButton>
+                <TouchableButton
+                  style={styles.playButton}
+                  onPress={handleWatchVideo}
+                  accessibility={{
+                    label: "Watch TMS Video"
+                  }}
+                >
+                  <View style={styles.playButtonInner}>
+                    <Ionicons name="play" size={20} color={Colors.white} />
+                  </View>
+                  <Animated.View 
+                    style={[
+                      styles.pulseRing,
+                      {
+                        opacity: pulseAnim1.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.5, 0],
+                        }),
+                        transform: [{
+                          scale: pulseAnim1.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 1.6],
+                          }),
+                        }],
+                      },
+                    ]} 
+                  />
+                  <Animated.View 
+                    style={[
+                      styles.pulseRing,
+                      {
+                        opacity: pulseAnim2.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.5, 0],
+                        }),
+                        transform: [{
+                          scale: pulseAnim2.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 1.6],
+                          }),
+                        }],
+                      },
+                    ]} 
                   />
                 </TouchableButton>
               </View>
@@ -850,7 +919,7 @@ export default function HomeScreen() {
             </View>
 
             {/* FAQ Section */}
-            <FAQSection faqItems={faqItems} />
+            <FAQSection faqItems={FAQ_ITEMS} />
 
             {/* Take Control Section */}
             <TakeControlSection
@@ -1142,6 +1211,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     flexWrap: 'nowrap',
     justifyContent: 'flex-start',
+    gap: 16,
   },
   tmsInfoButton: {
     flexDirection: 'row',
@@ -1305,5 +1375,41 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     marginRight: 10,
     marginTop: 4,
+  },
+  playButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    marginLeft: 8,
+    alignSelf: 'center',
+    position: 'relative',
+    overflow: 'visible',
+  },
+  playButtonInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+    backgroundColor: Colors.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  pulseRing: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: Colors.secondary,
+    backgroundColor: 'transparent',
+    zIndex: 1,
   },
 });

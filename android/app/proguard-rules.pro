@@ -55,3 +55,23 @@
 }
 
 # Add any project specific keep options here:
+
+# Keep native methods
+-keepclassmembers class * {
+    native <methods>;
+}
+
+# Keep JavaScript interface methods
+-keepclassmembers,includedescriptorclasses class * { native <methods>; }
+-keepclassmembers class *  { @com.facebook.react.uimanager.annotations.ReactProp <methods>; }
+-keepclassmembers class *  { @com.facebook.react.uimanager.annotations.ReactPropGroup <methods>; }
+
+# Keep custom components
+-keep public class com.horcrux.svg.** {*;}
+
+# Keep Hermes
+-keep class com.facebook.hermes.unicode.** { *; }
+-keep class com.facebook.jni.** { *; }
+
+# Keep your app's classes
+-keep class com.emrald.tms.** { *; }

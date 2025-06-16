@@ -1,4 +1,4 @@
-package com.ramsha_malik.tms_app
+package com.emrald.tms
 
 import android.app.Application
 import android.content.res.Configuration

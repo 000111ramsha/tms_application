@@ -33,8 +33,8 @@ import Fonts from "../src/constants/Fonts";
 import Layout from "../src/constants/Layout";
 import Spacing from "../src/constants/Spacing";
 
-// Validation rules for the form
-const validationRules = {
+// Constants
+const VALIDATION_RULES = {
   email: [
     { type: 'required', fieldName: 'Email' },
     { type: 'email' }
@@ -52,64 +52,86 @@ const validationRules = {
   ]
 };
 
-export default function PatientDemographicSheetScreen() {
-  const router = useRouter();
-  const scrollViewPadding = useScrollViewPadding();
-  const { animatedStyle } = useScreenAnimation();
+const INITIAL_FORM_DATA = {
+  fullLegalName: '',
+  date: null,
+  phone: '',
+  email: '',
+  address: '',
+  cityStateZip: '',
+  age: '',
+  dob: null,
+  ssn: '',
+  gender: '',
+  activeDutyServiceMember: '',
+  dodBenefit: '',
+  currentEmployer: '',
+  spouseName: '',
+  spouseAge: '',
+  spouseDob: null,
+  spouseSsn: '',
+  spouseEmployer: '',
+  referringProvider: '',
+  primaryHealthInsurance: '',
+  policy: '',
+  group: '',
+  knownMedicalConditions: '',
+  drugAllergies: '',
+  currentMedications: '',
+  emergencyContactName: '',
+  emergencyContactPhone: '',
+  emergencyContactRelationship: '',
+  firstName: '',
+  lastName: '',
+  dateOfBirth: null
+};
 
-  const [formData, setFormData] = useState({
-    fullLegalName: '',
-    date: null,
-    phone: '',
-    email: '',
-    address: '',
-    cityStateZip: '',
-    age: '',
-    dob: null,
-    ssn: '',
-    gender: '',
-    activeDutyServiceMember: '',
-    dodBenefit: '',
-    currentEmployer: '',
-    spouseName: '',
-    spouseAge: '',
-    spouseDob: null,
-    spouseSsn: '',
-    spouseEmployer: '',
-    referringProvider: '',
-    primaryHealthInsurance: '',
-    policy: '',
-    group: '',
-    knownMedicalConditions: '',
-    drugAllergies: '',
-    currentMedications: '',
-    emergencyContactName: '',
-    emergencyContactPhone: '',
-    emergencyContactRelationship: '',
-    firstName: '',
-    lastName: '',
-    dateOfBirth: null
-  });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentSessionId, setCurrentSessionId] = useState(null);
+// Custom hooks
+const useFormState = () => {
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [validationErrors, setValidationErrors] = useState({});
   const [showErrors, setShowErrors] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Load current session ID on component mount
-  React.useEffect(() => {
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
+  return {
+    formData,
+    setFormData,
+    validationErrors,
+    setValidationErrors,
+    showErrors,
+    setShowErrors,
+    handleInputChange
+  };
+};
+
+const useSessionState = () => {
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+
+  useEffect(() => {
     const loadSessionId = async () => {
       const sessionId = await PatientSessionService.getCurrentSessionId();
       setCurrentSessionId(sessionId);
     };
     loadSessionId();
   }, []);
-  
-  const [isSubmitPressed, setIsSubmitPressed] = useState(false);
-  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
 
-  // Create refs for each section and field
+  return { currentSessionId, setCurrentSessionId };
+};
+
+const useFormRefs = () => {
   const sectionRefs = {
     personalSection: React.useRef(null),
     militarySection: React.useRef(null),
@@ -119,7 +141,6 @@ export default function PatientDemographicSheetScreen() {
     emergencySection: React.useRef(null)
   };
 
-  // Add field refs
   const fieldRefs = {
     // Personal Information fields
     fullLegalName: React.useRef(null),
@@ -164,8 +185,30 @@ export default function PatientDemographicSheetScreen() {
     emergencyContactRelationship: React.useRef(null)
   };
 
-  // Add scrollView ref
   const scrollViewRef = useRef(null);
+
+  return {
+    sectionRefs,
+    fieldRefs,
+    scrollViewRef
+  };
+};
+
+export default function PatientDemographicSheetScreen() {
+  const router = useRouter();
+  const scrollViewPadding = useScrollViewPadding();
+  const { animatedStyle } = useScreenAnimation();
+
+  // State management
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isSubmitPressed, setIsSubmitPressed] = useState(false);
+  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+
+  // Custom hooks
+  const formState = useFormState();
+  const { currentSessionId, setCurrentSessionId } = useSessionState();
+  const { sectionRefs, fieldRefs, scrollViewRef } = useFormRefs();
 
   // Load saved form data when component mounts
   useEffect(() => {
@@ -177,7 +220,7 @@ export default function PatientDemographicSheetScreen() {
     try {
       const savedData = await OfflineStorageService.getOfflineFormData('patientDemographic');
       if (savedData) {
-        setFormData(savedData);
+        formState.setFormData(savedData);
       }
     } catch (error) {
       console.error('Error loading saved form data:', error);
@@ -185,25 +228,11 @@ export default function PatientDemographicSheetScreen() {
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-
-    // Clear validation error for this field when user starts typing
-    if (validationErrors[field]) {
-      setValidationErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
+    formState.handleInputChange(field, value);
   };
 
   const handleDropdownSelect = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    formState.handleInputChange(field, value);
     setOpenDropdownIndex(null);
   };
 
@@ -212,14 +241,14 @@ export default function PatientDemographicSheetScreen() {
 
     try {
       setIsSubmitting(true);
-      setShowErrors(true);
+      formState.setShowErrors(true);
 
       // Validate form data using the validation
-      const validation = PatientIntakeValidation.validateForm(formData);
+      const validation = PatientIntakeValidation.validateForm(formState.formData);
 
       if (!validation.isValid) {
         // Set all validation errors
-        setValidationErrors(validation.errors);
+        formState.setValidationErrors(validation.errors);
         
         // Show error alert with all validation errors
         const errorMessages = Object.values(validation.errors).join('\n');
@@ -262,10 +291,10 @@ export default function PatientDemographicSheetScreen() {
       }
 
       // Clear any existing errors
-      setValidationErrors({});
+      formState.setValidationErrors({});
 
       // Submit the patient demographic data
-      const result = await FormSubmissionService.submitPatientDemographics(formData);
+      const result = await FormSubmissionService.submitPatientDemographics(formState.formData);
 
       if (result.success) {
         setShowSuccessModal(true);
@@ -346,13 +375,13 @@ export default function PatientDemographicSheetScreen() {
 
   const renderDropdown = (field, options, placeholder, ref) => {
     const isOpen = openDropdownIndex === field;
-    const selectedValue = formData[field];
+    const selectedValue = formState.formData[field];
     const displayText = selectedValue || placeholder;
     
     return (
       <View style={[
         styles.dropdownContainer,
-        validationErrors[field] && showErrors && styles.dropdownContainerError
+        formState.validationErrors[field] && formState.showErrors && styles.dropdownContainerError
       ]}>
         <TouchableOpacity
           ref={ref}
@@ -365,7 +394,7 @@ export default function PatientDemographicSheetScreen() {
           <Ionicons 
             name={isOpen ? "chevron-up" : "chevron-down"} 
             size={20} 
-            color={validationErrors[field] && showErrors ? '#dc3545' : Colors.primary} 
+            color={formState.validationErrors[field] && formState.showErrors ? '#dc3545' : Colors.primary} 
             style={{ marginLeft: 8 }} 
           />
         </TouchableOpacity>
@@ -386,8 +415,8 @@ export default function PatientDemographicSheetScreen() {
             ))}
           </ScrollView>
         )}
-        {validationErrors[field] && showErrors && (
-          <Text style={styles.errorText}>{validationErrors[field]}</Text>
+        {formState.validationErrors[field] && formState.showErrors && (
+          <Text style={styles.errorText}>{formState.validationErrors[field]}</Text>
         )}
       </View>
     );
@@ -439,15 +468,15 @@ export default function PatientDemographicSheetScreen() {
                   ref={fieldRefs.fullLegalName}
                   style={[
                     styles.textInput,
-                    validationErrors.fullLegalName && showErrors && styles.textInputError
+                    formState.validationErrors.fullLegalName && formState.showErrors && styles.textInputError
                   ]}
-                  value={formData.fullLegalName}
+                  value={formState.formData.fullLegalName}
                   onChangeText={(value) => handleInputChange('fullLegalName', value)}
                   placeholder="Enter your full legal name"
                   placeholderTextColor="#666666"
                 />
-                {validationErrors.fullLegalName && showErrors && (
-                  <Text style={styles.errorText}>{validationErrors.fullLegalName}</Text>
+                {formState.validationErrors.fullLegalName && formState.showErrors && (
+                  <Text style={styles.errorText}>{formState.validationErrors.fullLegalName}</Text>
                 )}
               </View>
 
@@ -455,13 +484,13 @@ export default function PatientDemographicSheetScreen() {
                 <Text style={styles.label}>Date *</Text>
                 <ModernDatePicker
                   ref={fieldRefs.date}
-                  value={formData.date}
+                  value={formState.formData.date}
                   onDateChange={(date) => handleInputChange('date', date)}
                   placeholder="Select Date"
                   placeholderTextColor="#666666"
                   textColor="#000000"
                   style={styles.datePickerContainer}
-                  error={validationErrors.date && showErrors ? validationErrors.date : null}
+                  error={formState.validationErrors.date && formState.showErrors ? formState.validationErrors.date : null}
                 />
               </View>
 
@@ -471,16 +500,16 @@ export default function PatientDemographicSheetScreen() {
                   ref={fieldRefs.phone}
                   style={[
                     styles.textInput,
-                    validationErrors.phone && showErrors && styles.textInputError
+                    formState.validationErrors.phone && formState.showErrors && styles.textInputError
                   ]}
-                  value={formData.phone}
+                  value={formState.formData.phone}
                   onChangeText={(value) => handleInputChange('phone', value)}
                   placeholder="(123) 456-7890"
                   placeholderTextColor="#666666"
                   keyboardType="phone-pad"
                 />
-                {validationErrors.phone && showErrors && (
-                  <Text style={styles.errorText}>{validationErrors.phone}</Text>
+                {formState.validationErrors.phone && formState.showErrors && (
+                  <Text style={styles.errorText}>{formState.validationErrors.phone}</Text>
                 )}
               </View>
 
@@ -490,16 +519,16 @@ export default function PatientDemographicSheetScreen() {
                   ref={fieldRefs.email}
                   style={[
                     styles.textInput,
-                    validationErrors.email && showErrors && styles.textInputError
+                    formState.validationErrors.email && formState.showErrors && styles.textInputError
                   ]}
-                  value={formData.email}
+                  value={formState.formData.email}
                   onChangeText={(value) => handleInputChange('email', value)}
                   placeholder="email@example.com"
                   placeholderTextColor="#666666"
                   keyboardType="email-address"
                 />
-                {validationErrors.email && showErrors && (
-                  <Text style={styles.errorText}>{validationErrors.email}</Text>
+                {formState.validationErrors.email && formState.showErrors && (
+                  <Text style={styles.errorText}>{formState.validationErrors.email}</Text>
                 )}
               </View>
 
@@ -509,15 +538,15 @@ export default function PatientDemographicSheetScreen() {
                   ref={fieldRefs.address}
                   style={[
                     styles.textInput,
-                    validationErrors.address && showErrors && styles.textInputError
+                    formState.validationErrors.address && formState.showErrors && styles.textInputError
                   ]}
-                  value={formData.address}
+                  value={formState.formData.address}
                   onChangeText={(value) => handleInputChange('address', value)}
                   placeholder="Street Address"
                   placeholderTextColor="#666666"
                 />
-                {validationErrors.address && showErrors && (
-                  <Text style={styles.errorText}>{validationErrors.address}</Text>
+                {formState.validationErrors.address && formState.showErrors && (
+                  <Text style={styles.errorText}>{formState.validationErrors.address}</Text>
                 )}
               </View>
 
@@ -527,15 +556,15 @@ export default function PatientDemographicSheetScreen() {
                   ref={fieldRefs.cityStateZip}
                   style={[
                     styles.textInput,
-                    validationErrors.cityStateZip && showErrors && styles.textInputError
+                    formState.validationErrors.cityStateZip && formState.showErrors && styles.textInputError
                   ]}
-                  value={formData.cityStateZip}
+                  value={formState.formData.cityStateZip}
                   onChangeText={(value) => handleInputChange('cityStateZip', value)}
                   placeholder="City, State ZIP"
                   placeholderTextColor="#666666"
                 />
-                {validationErrors.cityStateZip && showErrors && (
-                  <Text style={styles.errorText}>{validationErrors.cityStateZip}</Text>
+                {formState.validationErrors.cityStateZip && formState.showErrors && (
+                  <Text style={styles.errorText}>{formState.validationErrors.cityStateZip}</Text>
                 )}
               </View>
 
@@ -546,16 +575,16 @@ export default function PatientDemographicSheetScreen() {
                     ref={fieldRefs.age}
                     style={[
                       styles.textInput,
-                      validationErrors.age && showErrors && styles.textInputError
+                      formState.validationErrors.age && formState.showErrors && styles.textInputError
                     ]}
-                    value={formData.age}
+                    value={formState.formData.age}
                     onChangeText={(value) => handleInputChange('age', value)}
                     placeholder="Age"
                     placeholderTextColor="#666666"
                     keyboardType="numeric"
                   />
-                  {validationErrors.age && showErrors && (
-                    <Text style={styles.errorText}>{validationErrors.age}</Text>
+                  {formState.validationErrors.age && formState.showErrors && (
+                    <Text style={styles.errorText}>{formState.validationErrors.age}</Text>
                   )}
                 </View>
 
@@ -563,14 +592,14 @@ export default function PatientDemographicSheetScreen() {
                   <Text style={styles.label}>Date of Birth *</Text>
                   <ModernDatePicker
                     ref={fieldRefs.dob}
-                    value={formData.dob}
+                    value={formState.formData.dob}
                     onDateChange={(date) => handleInputChange('dob', date)}
                     placeholder="Select Date of Birth"
                     placeholderTextColor="#666666"
                     textColor="#000000"
                     isDateOfBirth={true}
                     style={styles.datePickerContainer}
-                    error={validationErrors.dob && showErrors ? validationErrors.dob : null}
+                    error={formState.validationErrors.dob && formState.showErrors ? formState.validationErrors.dob : null}
                   />
                 </View>
               </View>
@@ -581,16 +610,16 @@ export default function PatientDemographicSheetScreen() {
                   ref={fieldRefs.ssn}
                   style={[
                     styles.textInput,
-                    validationErrors.ssn && showErrors && styles.textInputError
+                    formState.validationErrors.ssn && formState.showErrors && styles.textInputError
                   ]}
-                  value={formData.ssn}
+                  value={formState.formData.ssn}
                   onChangeText={(value) => handleInputChange('ssn', value)}
                   placeholder="XXX-XX-XXXX"
                   placeholderTextColor="#666666"
                   secureTextEntry={true}
                 />
-                {validationErrors.ssn && showErrors && (
-                  <Text style={styles.errorText}>{validationErrors.ssn}</Text>
+                {formState.validationErrors.ssn && formState.showErrors && (
+                  <Text style={styles.errorText}>{formState.validationErrors.ssn}</Text>
                 )}
               </View>
 
@@ -617,7 +646,7 @@ export default function PatientDemographicSheetScreen() {
                 <TextInput
                   ref={fieldRefs.dodBenefit}
                   style={styles.textInput}
-                  value={formData.dodBenefit}
+                  value={formState.formData.dodBenefit}
                   onChangeText={(value) => handleInputChange('dodBenefit', value)}
                   placeholder="DOD Benefit Information"
                   placeholderTextColor="#666666"
@@ -637,7 +666,7 @@ export default function PatientDemographicSheetScreen() {
                 <TextInput
                   ref={fieldRefs.currentEmployer}
                   style={styles.textInput}
-                  value={formData.currentEmployer}
+                  value={formState.formData.currentEmployer}
                   onChangeText={(value) => handleInputChange('currentEmployer', value)}
                   placeholder="Current Employer"
                   placeholderTextColor="#666666"
@@ -657,7 +686,7 @@ export default function PatientDemographicSheetScreen() {
                 <TextInput
                   ref={fieldRefs.spouseName}
                   style={styles.textInput}
-                  value={formData.spouseName}
+                  value={formState.formData.spouseName}
                   onChangeText={(value) => handleInputChange('spouseName', value)}
                   placeholder="Spouse Full Name"
                   placeholderTextColor="#666666"
@@ -670,7 +699,7 @@ export default function PatientDemographicSheetScreen() {
                   <TextInput
                     ref={fieldRefs.spouseAge}
                     style={styles.textInput}
-                    value={formData.spouseAge}
+                    value={formState.formData.spouseAge}
                     onChangeText={(value) => handleInputChange('spouseAge', value)}
                     placeholder="Age"
                     placeholderTextColor="#666666"
@@ -682,7 +711,7 @@ export default function PatientDemographicSheetScreen() {
                   <Text style={styles.label}>Spouse DOB</Text>
                   <ModernDatePicker
                     ref={fieldRefs.spouseDob}
-                    value={formData.spouseDob}
+                    value={formState.formData.spouseDob}
                     onDateChange={(date) => handleInputChange('spouseDob', date)}
                     placeholder="Select Spouse DOB"
                     placeholderTextColor="#666666"
@@ -699,16 +728,16 @@ export default function PatientDemographicSheetScreen() {
                   ref={fieldRefs.spouseSsn}
                   style={[
                     styles.textInput,
-                    validationErrors.spouseSsn && showErrors && styles.textInputError
+                    formState.validationErrors.spouseSsn && formState.showErrors && styles.textInputError
                   ]}
-                  value={formData.spouseSsn}
+                  value={formState.formData.spouseSsn}
                   onChangeText={(value) => handleInputChange('spouseSsn', value)}
                   placeholder="XXX-XX-XXXX"
                   placeholderTextColor="#666666"
                   secureTextEntry={true}
                 />
-                {validationErrors.spouseSsn && showErrors && (
-                  <Text style={styles.errorText}>{validationErrors.spouseSsn}</Text>
+                {formState.validationErrors.spouseSsn && formState.showErrors && (
+                  <Text style={styles.errorText}>{formState.validationErrors.spouseSsn}</Text>
                 )}
               </View>
 
@@ -717,7 +746,7 @@ export default function PatientDemographicSheetScreen() {
                 <TextInput
                   ref={fieldRefs.spouseEmployer}
                   style={styles.textInput}
-                  value={formData.spouseEmployer}
+                  value={formState.formData.spouseEmployer}
                   onChangeText={(value) => handleInputChange('spouseEmployer', value)}
                   placeholder="Spouse Employer"
                   placeholderTextColor="#666666"
@@ -737,7 +766,7 @@ export default function PatientDemographicSheetScreen() {
                 <TextInput
                   ref={fieldRefs.referringProvider}
                   style={styles.textInput}
-                  value={formData.referringProvider}
+                  value={formState.formData.referringProvider}
                   onChangeText={(value) => handleInputChange('referringProvider', value)}
                   placeholder="Referring Provider"
                   placeholderTextColor="#666666"
@@ -749,7 +778,7 @@ export default function PatientDemographicSheetScreen() {
                 <TextInput
                   ref={fieldRefs.primaryHealthInsurance}
                   style={styles.textInput}
-                  value={formData.primaryHealthInsurance}
+                  value={formState.formData.primaryHealthInsurance}
                   onChangeText={(value) => handleInputChange('primaryHealthInsurance', value)}
                   placeholder="Insurance Provider"
                   placeholderTextColor="#666666"
@@ -762,7 +791,7 @@ export default function PatientDemographicSheetScreen() {
                   <TextInput
                     ref={fieldRefs.policy}
                     style={styles.textInput}
-                    value={formData.policy}
+                    value={formState.formData.policy}
                     onChangeText={(value) => handleInputChange('policy', value)}
                     placeholder="Policy Number"
                     placeholderTextColor="#666666"
@@ -774,7 +803,7 @@ export default function PatientDemographicSheetScreen() {
                   <TextInput
                     ref={fieldRefs.group}
                     style={styles.textInput}
-                    value={formData.group}
+                    value={formState.formData.group}
                     onChangeText={(value) => handleInputChange('group', value)}
                     placeholder="Group Number"
                     placeholderTextColor="#666666"
@@ -795,7 +824,7 @@ export default function PatientDemographicSheetScreen() {
                 <TextInput
                   ref={fieldRefs.knownMedicalConditions}
                   style={[styles.textInput, styles.textArea]}
-                  value={formData.knownMedicalConditions}
+                  value={formState.formData.knownMedicalConditions}
                   onChangeText={(value) => handleInputChange('knownMedicalConditions', value)}
                   placeholder="List any known medical conditions"
                   placeholderTextColor="#666666"
@@ -809,7 +838,7 @@ export default function PatientDemographicSheetScreen() {
                 <TextInput
                   ref={fieldRefs.drugAllergies}
                   style={[styles.textInput, styles.textArea]}
-                  value={formData.drugAllergies}
+                  value={formState.formData.drugAllergies}
                   onChangeText={(value) => handleInputChange('drugAllergies', value)}
                   placeholder="List any drug allergies"
                   placeholderTextColor="#666666"
@@ -823,7 +852,7 @@ export default function PatientDemographicSheetScreen() {
                 <TextInput
                   ref={fieldRefs.currentMedications}
                   style={[styles.textInput, styles.textArea]}
-                  value={formData.currentMedications}
+                  value={formState.formData.currentMedications}
                   onChangeText={(value) => handleInputChange('currentMedications', value)}
                   placeholder="List current medications with dosages"
                   placeholderTextColor="#666666"
@@ -845,7 +874,7 @@ export default function PatientDemographicSheetScreen() {
                 <TextInput
                   ref={fieldRefs.emergencyContactName}
                   style={styles.textInput}
-                  value={formData.emergencyContactName}
+                  value={formState.formData.emergencyContactName}
                   onChangeText={(value) => handleInputChange('emergencyContactName', value)}
                   placeholder="Emergency Contact Name"
                   placeholderTextColor="#666666"
@@ -857,7 +886,7 @@ export default function PatientDemographicSheetScreen() {
                 <TextInput
                   ref={fieldRefs.emergencyContactPhone}
                   style={styles.textInput}
-                  value={formData.emergencyContactPhone}
+                  value={formState.formData.emergencyContactPhone}
                   onChangeText={(value) => handleInputChange('emergencyContactPhone', value)}
                   placeholder="(123) 456-7890"
                   placeholderTextColor="#666666"
@@ -870,7 +899,7 @@ export default function PatientDemographicSheetScreen() {
                 <TextInput
                   ref={fieldRefs.emergencyContactRelationship}
                   style={styles.textInput}
-                  value={formData.emergencyContactRelationship}
+                  value={formState.formData.emergencyContactRelationship}
                   onChangeText={(value) => handleInputChange('emergencyContactRelationship', value)}
                   placeholder="Relationship"
                   placeholderTextColor="#666666"

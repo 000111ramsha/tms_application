@@ -83,6 +83,10 @@ class PDFEmailService {
               background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
               padding: 0;
               margin: 0;
+              font-size: 14px;
+              min-height: 100vh;
+              display: flex;
+              flex-direction: column;
             }
 
             .container {
@@ -91,6 +95,10 @@ class PDFEmailService {
               background: white;
               box-shadow: 0 0 20px rgba(0,0,0,0.1);
               min-height: 100vh;
+              position: relative;
+              display: flex;
+              flex-direction: column;
+              padding: 60px 0;
             }
 
             .header {
@@ -100,124 +108,121 @@ class PDFEmailService {
               text-align: center;
               position: relative;
               overflow: hidden;
-            }
-
-            .header::before {
-              content: '';
-              position: absolute;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-              opacity: 0.3;
+              border-bottom: 4px solid rgba(255,255,255,0.1);
+              margin-bottom: 40px;
             }
 
             .header h1 {
-              font-size: 32px;
-              font-weight: bold;
-              margin-bottom: 10px;
+              font-size: 36px;
+              font-weight: 800;
+              margin-bottom: 15px;
               text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
               position: relative;
               z-index: 1;
+              letter-spacing: 0.5px;
             }
 
             .header .subtitle {
-              font-size: 16px;
-              opacity: 0.9;
+              font-size: 18px;
+              opacity: 0.95;
               position: relative;
               z-index: 1;
+              font-weight: 500;
+              letter-spacing: 0.3px;
             }
 
             .header .date {
-              font-size: 14px;
-              opacity: 0.8;
-              margin-top: 15px;
-              padding: 8px 16px;
-              background: rgba(255,255,255,0.2);
-              border-radius: 20px;
+              font-size: 15px;
+              opacity: 0.9;
+              margin-top: 20px;
+              padding: 10px 20px;
+              background: rgba(255,255,255,0.15);
+              border-radius: 25px;
               display: inline-block;
               position: relative;
               z-index: 1;
+              backdrop-filter: blur(5px);
+              border: 1px solid rgba(255,255,255,0.2);
             }
 
             .content {
-              padding: 30px;
+              padding: 0 30px;
+              flex: 1;
+              margin-bottom: 40px;
             }
 
             .section {
-              margin-bottom: 35px;
+              margin-bottom: 40px;
               background: #f8f9fa;
-              border-radius: 12px;
-              padding: 25px;
+              border-radius: 15px;
+              padding: 30px;
               border-left: 5px solid #2c5264;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+              box-shadow: 0 3px 15px rgba(0,0,0,0.05);
+              transition: transform 0.2s ease;
+            }
+
+            .section:hover {
+              transform: translateY(-2px);
             }
 
             .section h2 {
               color: #2c5264;
-              font-size: 22px;
-              font-weight: bold;
-              margin-bottom: 20px;
-              padding-bottom: 10px;
+              font-size: 24px;
+              font-weight: 700;
+              margin-bottom: 25px;
+              padding-bottom: 12px;
               border-bottom: 2px solid #10a39b;
               display: flex;
               align-items: center;
+              letter-spacing: 0.3px;
             }
 
             .section h2::before {
               content: '●';
               color: #10a39b;
-              margin-right: 10px;
-              font-size: 16px;
+              margin-right: 12px;
+              font-size: 18px;
             }
 
             .section h3 {
               color: #2c5264;
-              font-size: 18px;
+              font-size: 20px;
               font-weight: 600;
-              margin: 20px 0 15px 0;
-              padding-left: 15px;
-              border-left: 3px solid #10a39b;
-            }
-
-            .section h4 {
-              color: #2c5264;
-              font-size: 16px;
-              font-weight: 600;
-              margin: 15px 0 10px 0;
-              background: #e9ecef;
-              padding: 10px 15px;
-              border-radius: 6px;
-              border-left: 3px solid #10a39b;
+              margin: 25px 0 20px 0;
+              padding-left: 18px;
+              border-left: 4px solid #10a39b;
+              letter-spacing: 0.2px;
             }
 
             .field {
-              margin-bottom: 15px;
-              padding: 12px;
+              margin-bottom: 20px;
+              padding: 15px;
               background: white;
-              border-radius: 8px;
+              border-radius: 10px;
               border: 1px solid #e9ecef;
               transition: all 0.3s ease;
+              box-shadow: 0 2px 5px rgba(0,0,0,0.02);
             }
 
             .field:hover {
               border-color: #10a39b;
-              box-shadow: 0 2px 8px rgba(16,163,155,0.1);
+              box-shadow: 0 4px 12px rgba(16,163,155,0.1);
+              transform: translateY(-1px);
             }
 
             .label {
               font-weight: 600;
               color: #2c5264;
-              font-size: 14px;
+              font-size: 15px;
               display: block;
-              margin-bottom: 5px;
+              margin-bottom: 8px;
+              letter-spacing: 0.2px;
             }
 
             .value {
-              color: #333;
-              font-size: 14px;
-              line-height: 1.5;
+              color: #444;
+              font-size: 15px;
+              line-height: 1.6;
               padding-left: 0;
             }
 
@@ -227,84 +232,101 @@ class PDFEmailService {
             }
 
             .checkbox-list {
-              margin: 10px 0;
-              padding: 15px;
+              margin: 15px 0;
+              padding: 20px;
               background: white;
-              border-radius: 8px;
+              border-radius: 12px;
               border: 1px solid #e9ecef;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.03);
             }
 
             .checkbox-item {
-              margin-bottom: 8px;
-              padding: 8px 12px;
-              border-radius: 6px;
+              margin-bottom: 12px;
+              padding: 12px 15px;
+              border-radius: 8px;
               display: flex;
               align-items: center;
+              transition: all 0.2s ease;
             }
 
             .checkbox-selected {
               background: #e8f5e8;
               color: #2c5264;
               font-weight: 500;
-              border-left: 3px solid #52c41a;
+              border-left: 4px solid #52c41a;
+              box-shadow: 0 2px 5px rgba(82,196,26,0.1);
             }
 
             .checkbox-selected::before {
               content: '✓';
               color: #52c41a;
               font-weight: bold;
-              margin-right: 8px;
+              margin-right: 10px;
+              font-size: 16px;
             }
 
             .checkbox-unselected {
               color: #999;
               font-style: italic;
+              background: #f8f9fa;
+              border-left: 4px solid #e9ecef;
             }
 
             .footer {
               background: #2c5264;
               color: white;
               text-align: center;
-              padding: 25px;
-              font-size: 12px;
-              margin-top: 40px;
+              padding: 30px;
+              font-size: 13px;
+              margin-top: auto;
+              border-top: 4px solid rgba(255,255,255,0.1);
+              position: relative;
+              bottom: 0;
+              width: 100%;
             }
 
             .footer .company {
-              font-size: 16px;
-              font-weight: 600;
-              margin-bottom: 5px;
+              font-size: 18px;
+              font-weight: 700;
+              margin-bottom: 8px;
+              letter-spacing: 0.5px;
             }
 
             .footer .tagline {
-              opacity: 0.8;
+              opacity: 0.9;
               font-style: italic;
+              font-size: 14px;
+              margin-bottom: 15px;
             }
 
             .score-highlight {
               background: linear-gradient(135deg, #2c5264 0%, #10a39b 100%);
               color: white;
-              padding: 15px 20px;
-              border-radius: 10px;
+              padding: 20px 25px;
+              border-radius: 12px;
               text-align: center;
-              font-size: 18px;
-              font-weight: bold;
-              margin: 20px 0;
-              box-shadow: 0 4px 15px rgba(44,82,100,0.3);
+              font-size: 20px;
+              font-weight: 700;
+              margin: 25px 0;
+              box-shadow: 0 4px 20px rgba(44,82,100,0.3);
+              letter-spacing: 0.5px;
+              border: 1px solid rgba(255,255,255,0.1);
             }
 
             .medication-details {
               background: #f8f9fa;
-              padding: 15px;
-              border-radius: 8px;
+              padding: 20px;
+              border-radius: 10px;
               border-left: 4px solid #10a39b;
-              margin-top: 10px;
+              margin-top: 15px;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.03);
             }
 
             .medication-details div {
-              margin-bottom: 8px;
-              padding: 5px 0;
+              margin-bottom: 12px;
+              padding: 8px 0;
               border-bottom: 1px solid #e9ecef;
+              font-size: 14px;
             }
 
             .medication-details div:last-child {
@@ -314,35 +336,116 @@ class PDFEmailService {
 
             .response-item {
               background: white;
-              padding: 15px;
-              margin-bottom: 10px;
-              border-radius: 8px;
+              padding: 20px;
+              margin-bottom: 15px;
+              border-radius: 10px;
               border-left: 4px solid #10a39b;
-              box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+              box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+              transition: transform 0.2s ease;
+            }
+
+            .response-item:hover {
+              transform: translateY(-2px);
             }
 
             .response-item .question {
               font-weight: 600;
               color: #2c5264;
-              margin-bottom: 8px;
+              margin-bottom: 12px;
+              font-size: 15px;
+              letter-spacing: 0.2px;
             }
 
             .response-item .answer {
-              color: #333;
+              color: #444;
               font-size: 14px;
-              padding: 8px 12px;
+              padding: 12px 15px;
               background: #f8f9fa;
-              border-radius: 6px;
+              border-radius: 8px;
               border-left: 3px solid #10a39b;
+              line-height: 1.5;
             }
 
             @media print {
+              @page {
+                size: A4;
+                margin: 60px 0;
+              }
+
+              html {
+                margin: 0;
+                padding: 0;
+              }
+
+              body {
+                margin: 0;
+                padding: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                background: none;
+              }
+
               .container {
                 box-shadow: none;
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+                min-height: auto;
+                background: none;
+              }
+
+              .header {
+                margin-bottom: 30px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                break-after: avoid;
+              }
+
+              .content {
+                padding: 0 30px;
+                margin-bottom: 30px;
               }
 
               .section {
                 break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #e9ecef;
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+              }
+
+              .field:hover,
+              .response-item:hover {
+                transform: none;
+                box-shadow: none;
+              }
+
+              .footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                margin: 0;
+                padding: 20px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+
+              /* Ensure content doesn't overlap with footer */
+              .content::after {
+                content: '';
+                display: block;
+                height: 100px; /* Adjust based on footer height */
+              }
+
+              /* Add page breaks */
+              .section {
+                page-break-inside: avoid;
+              }
+
+              /* Ensure proper spacing at page breaks */
+              .section + .section {
+                margin-top: 20px;
               }
             }
           </style>

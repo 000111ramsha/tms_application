@@ -208,28 +208,29 @@ export class FormValidator {
 
   // Assessment responses validation
   static validateAssessmentResponses(responses, totalQuestions) {
+    if (!responses || Object.keys(responses).length === 0) {
+      return {
+        isValid: false,
+        error: 'Please answer all questions before submitting.',
+        unansweredQuestions: Array.from({ length: totalQuestions }, (_, i) => i + 1)
+      };
+    }
+
     const unansweredQuestions = [];
-    
-    // Check each question
-      for (let i = 0; i < totalQuestions; i++) {
+    for (let i = 0; i < totalQuestions; i++) {
       if (!responses[i]) {
         unansweredQuestions.push(i + 1);
-        }
       }
+    }
 
     if (unansweredQuestions.length > 0) {
-      const questionList = unansweredQuestions.join(', ');
-      const errorMessage = unansweredQuestions.length === 1
-        ? `Please answer question ${questionList}`
-        : `Please answer questions ${questionList}`;
-      
-      return { 
-        isValid: false, 
-        error: errorMessage,
+      return {
+        isValid: false,
+        error: `Please answer all questions. Questions ${unansweredQuestions.join(', ')} are unanswered.`,
         unansweredQuestions
       };
     }
-    
+
     return { isValid: true, error: '', unansweredQuestions: [] };
   }
 
@@ -249,6 +250,122 @@ export class FormValidator {
     
     return { isValid: true, error: '' };
   }
+
+  validateBDIResponses(responses) {
+    const errors = {};
+    let totalScore = 0;
+
+    // Validate each response
+    for (let i = 0; i < 21; i++) {
+      const response = responses[i];
+      if (!response) {
+        errors[`question_${i + 1}`] = `Question ${i + 1} is required`;
+        continue;
+      }
+
+      // Special handling for sleep and appetite questions
+      if (i === 15 || i === 17) { // Sleep and Appetite questions
+        const validValues = ['0', '1a', '1b', '2a', '2b', '3a', '3b'];
+        if (!validValues.includes(response)) {
+          errors[`question_${i + 1}`] = `Invalid response for question ${i + 1}`;
+        }
+        // Add numeric value to total score
+        totalScore += parseInt(response.replace(/[a-z]/g, ''));
+      } else {
+        // Regular questions
+        const value = parseInt(response);
+        if (isNaN(value) || value < 0 || value > 3) {
+          errors[`question_${i + 1}`] = `Invalid response for question ${i + 1}`;
+        }
+        totalScore += value;
+      }
+    }
+
+    // Validate total score
+    if (totalScore > 63) {
+      errors.totalScore = 'Total score cannot exceed 63';
+    }
+
+    // Validate suicidal thoughts severity
+    const suicidalResponse = parseInt(responses[8] || '0');
+    if (suicidalResponse >= 2) {
+      errors.suicidalThoughts = 'Please contact your healthcare provider immediately if you are having thoughts of self-harm';
+    }
+
+    // Validate response patterns
+    const allSameResponse = Object.values(responses).every((val, _, arr) => val === arr[0]);
+    if (allSameResponse) {
+      errors.responsePattern = 'Please ensure you are answering each question thoughtfully';
+    }
+
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors,
+      totalScore
+    };
+  }
+
+  validatePHQ9Responses(responses) {
+    const errors = {};
+    let totalScore = 0;
+
+    // Validate each response
+    for (let i = 0; i < 9; i++) {
+      const response = responses[i];
+      if (!response) {
+        errors[`question_${i + 1}`] = `Question ${i + 1} is required`;
+        continue;
+      }
+
+      const value = parseInt(response);
+      if (isNaN(value) || value < 0 || value > 3) {
+        errors[`question_${i + 1}`] = `Invalid response for question ${i + 1}`;
+      }
+      totalScore += value;
+    }
+
+    // Validate total score
+    if (totalScore > 27) {
+      errors.totalScore = 'Total score cannot exceed 27';
+    }
+
+    // Validate suicidal ideation severity
+    const suicidalResponse = parseInt(responses[8] || '0');
+    if (suicidalResponse >= 2) {
+      errors.suicidalIdeation = 'Please contact your healthcare provider immediately if you are having thoughts of self-harm';
+    }
+
+    // Validate functional impairment
+    const functionalImpairment = parseInt(responses[0] || '0') + parseInt(responses[1] || '0');
+    if (functionalImpairment >= 4) {
+      errors.functionalImpairment = 'Your responses suggest significant functional impairment. Please discuss this with your healthcare provider.';
+    }
+
+    // Validate response patterns
+    const allSameResponse = Object.values(responses).every((val, _, arr) => val === arr[0]);
+    if (allSameResponse) {
+      errors.responsePattern = 'Please ensure you are answering each question thoughtfully';
+    }
+
+    // Calculate severity level
+    let severityLevel = 'Minimal';
+    if (totalScore <= 4) severityLevel = 'Minimal';
+    else if (totalScore <= 9) severityLevel = 'Mild';
+    else if (totalScore <= 14) severityLevel = 'Moderate';
+    else if (totalScore <= 19) severityLevel = 'Moderately Severe';
+    else severityLevel = 'Severe';
+
+    if (severityLevel === 'Moderately Severe' || severityLevel === 'Severe') {
+      errors.severityLevel = `Your responses indicate ${severityLevel.toLowerCase()} depression. Please discuss this with your healthcare provider.`;
+    }
+
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors,
+      totalScore,
+      severityLevel
+    };
+  }
 }
 
 // Form-specific validation functions
@@ -259,44 +376,67 @@ export const PatientIntakeValidation = {
     // Full Legal Name (required, 2-50 characters, letters and spaces only)
     if (!formData.fullLegalName?.trim()) {
       errors.fullLegalName = 'Full Legal Name is required';
-    } else if (!/^[a-zA-Z\s]{2,50}$/.test(formData.fullLegalName)) {
-      errors.fullLegalName = 'Full Legal Name must be 2-50 characters and contain only letters and spaces';
+    } else if (!/^[a-zA-Z\s\-']{2,50}$/.test(formData.fullLegalName)) {
+      errors.fullLegalName = 'Full Legal Name must be 2-50 characters and contain only letters, spaces, hyphens, and apostrophes';
     }
     
-    // Consultation Date (required only)
+    // Consultation Date (required, not future)
     if (!formData.date) {
       errors.date = 'Consultation Date is required';
-    }
-    
-    // Phone (required, valid format)
-    if (!formData.phone?.trim()) {
-      errors.phone = 'Phone number is required';
-    } else if (!/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/.test(formData.phone)) {
-      errors.phone = 'Please enter a valid phone number (e.g., (123) 456-7890)';
-    }
-    
-    // Email (required, valid format)
-    if (!formData.email?.trim()) {
-      errors.email = 'Email is required';
     } else {
-      const trimmedEmail = formData.email.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-        errors.email = 'Please enter a valid email address';
+      const consultationDate = new Date(formData.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (consultationDate > today) {
+        errors.date = 'Consultation Date cannot be in the future';
       }
     }
     
-    // Address (required, 5-200 characters)
-    if (!formData.address?.trim()) {
-      errors.address = 'Address is required';
-    } else if (formData.address.length < 5 || formData.address.length > 200) {
-      errors.address = 'Address must be between 5 and 200 characters';
+    // Phone (required, valid format with international support)
+    if (!formData.phone?.trim()) {
+      errors.phone = 'Phone number is required';
+    } else {
+      const phoneRegex = /^(\+\d{1,3}[- ]?)?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
+      if (!phoneRegex.test(formData.phone.trim())) {
+        errors.phone = 'Please enter a valid phone number (e.g., (123) 456-7890 or +1-123-456-7890)';
+      }
     }
     
-    // City, State, ZIP (required, valid format)
+    // Email (required, valid format with disposable email check)
+    if (!formData.email?.trim()) {
+      errors.email = 'Email is required';
+    } else {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        errors.email = 'Please enter a valid email address';
+      } else {
+        // Check for common disposable email domains
+        const disposableDomains = ['tempmail.com', 'throwawaymail.com', 'mailinator.com'];
+        const domain = formData.email.split('@')[1].toLowerCase();
+        if (disposableDomains.includes(domain)) {
+          errors.email = 'Please use a valid email address';
+        }
+      }
+    }
+    
+    // Address (required, 5-200 characters, allows PO Box and unit numbers)
+    if (!formData.address?.trim()) {
+      errors.address = 'Address is required';
+    } else {
+      const addressRegex = /^[a-zA-Z0-9\s,.#-]+(?:[A-Za-z0-9\s,.#-]*[A-Za-z0-9])?$/;
+      if (!addressRegex.test(formData.address.trim()) || formData.address.length < 5 || formData.address.length > 200) {
+        errors.address = 'Please enter a valid address (5-200 characters)';
+      }
+    }
+    
+    // City, State, ZIP (required, more flexible format)
     if (!formData.cityStateZip?.trim()) {
       errors.cityStateZip = 'City, State, ZIP is required';
-    } else if (!/^[A-Za-z\s]+,\s*[A-Za-z]{2}\s*\d{5}(-\d{4})?$/.test(formData.cityStateZip)) {
+    } else {
+      const cityStateZipRegex = /^[A-Za-z\s]+(?:,\s*[A-Za-z]{2}\s*\d{5}(?:-\d{4})?)?$/;
+      if (!cityStateZipRegex.test(formData.cityStateZip.trim())) {
       errors.cityStateZip = 'Please enter in format: City, State ZIP (e.g., New York, NY 10001)';
+      }
     }
     
     // Age (required, 0-120)
@@ -315,19 +455,28 @@ export const PatientIntakeValidation = {
     } else {
       const dob = new Date(formData.dob);
       const today = new Date();
+      const minAge = 0;
+      const maxAge = 120;
+      
       if (dob > today) {
         errors.dob = 'Date of Birth cannot be in the future';
       } else {
         const age = today.getFullYear() - dob.getFullYear();
-        if (age < 0 || age > 120) {
-          errors.dob = 'Invalid Date of Birth';
+        const monthDiff = today.getMonth() - dob.getMonth();
+        const adjustedAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate()) ? age - 1 : age;
+        
+        if (adjustedAge < minAge || adjustedAge > maxAge) {
+          errors.dob = `Age must be between ${minAge} and ${maxAge} years`;
         }
       }
     }
     
     // SSN (optional, valid format if provided)
-    if (formData.ssn?.trim() && !/^\d{3}-?\d{2}-?\d{4}$/.test(formData.ssn)) {
+    if (formData.ssn?.trim()) {
+      const ssnRegex = /^(?!000|666|9\d{2})([0-8]\d{2}|7([0-6]\d|7[012]))([-\s]?)(?!00)\d{2}\1(?!0000)\d{4}$/;
+      if (!ssnRegex.test(formData.ssn.trim())) {
       errors.ssn = 'Please enter a valid SSN (e.g., 123-45-6789)';
+      }
     }
     
     // Gender (required)
@@ -349,14 +498,20 @@ export const PatientIntakeValidation = {
     }
     
     // Spouse DOB (optional, not future if provided)
-    if (formData.spouseDob && new Date(formData.spouseDob) > new Date()) {
+    if (formData.spouseDob) {
+      const spouseDob = new Date(formData.spouseDob);
+      const today = new Date();
+      if (spouseDob > today) {
       errors.spouseDob = 'Spouse Date of Birth cannot be in the future';
+      }
     }
     
     // Emergency Contact Phone (optional, valid format if provided)
-    if (formData.emergencyContactPhone?.trim() && 
-        !/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/.test(formData.emergencyContactPhone)) {
+    if (formData.emergencyContactPhone?.trim()) {
+      const phoneRegex = /^(\+\d{1,3}[- ]?)?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
+      if (!phoneRegex.test(formData.emergencyContactPhone.trim())) {
       errors.emergencyContactPhone = 'Please enter a valid emergency contact phone number';
+      }
     }
     
     return {
@@ -460,35 +615,117 @@ export const PatientIntakeValidation = {
     const errors = {};
     const sections = {
       conditions: 'Medical Conditions',
+      suicidal: 'Suicidal History',
       allergies: 'Allergies',
-      medications: 'Current Medications',
       family: 'Family History',
       signature: 'Signature'
     };
 
-    // Validate at least one condition is selected or other condition is provided
-    if (!formData.conditions?.length && !formData.otherConditions?.trim()) {
-      errors.conditions = `${sections.conditions}: Please select at least one condition or specify other conditions`;
+    // Validate medical conditions
+    const selectedConditions = Object.entries(formData.medicalConditions || {})
+      .filter(([_, isSelected]) => isSelected)
+      .map(([condition]) => condition);
+
+    if (selectedConditions.length === 0) {
+      errors.medicalConditions = `${sections.conditions}: Please select at least one condition or mark 'None'`;
+    } else if (selectedConditions.length > 20) {
+      errors.medicalConditions = `${sections.conditions}: You cannot select more than 20 conditions`;
     }
 
-    // Validate at least one allergy is selected or other allergy is provided
-    if (!formData.allergies?.length && !formData.otherAllergies?.trim()) {
-      errors.allergies = `${sections.allergies}: Please select at least one allergy or specify other allergies`;
+    // Check for mutually exclusive conditions
+    const mutuallyExclusivePairs = [
+      ['HIGH BLOOD PRESSURE', 'LOW BLOOD PRESSURE'],
+      ['WEIGHT LOSS/GAIN', 'APPETITE PROBLEMS']
+    ];
+
+    for (const [condition1, condition2] of mutuallyExclusivePairs) {
+      if (formData.medicalConditions?.[condition1] && formData.medicalConditions?.[condition2]) {
+        errors.medicalConditions = `${sections.conditions}: ${condition1} and ${condition2} cannot be selected together`;
+      }
     }
 
-    // Validate at least one medication is selected or other medication is provided
-    if (!formData.medications?.length && !formData.otherMedications?.trim()) {
-      errors.medications = `${sections.medications}: Please select at least one medication or specify other medications`;
+    // Validate suicidal history
+    if (!formData.suicidalThoughts) {
+      errors.suicidalThoughts = `${sections.suicidal}: Please indicate if you have had suicidal thoughts`;
+    }
+    if (!formData.attempts) {
+      errors.attempts = `${sections.suicidal}: Please indicate if you have had any attempts`;
     }
 
-    // Validate at least one family history item is selected or other family history is provided
-    if (!formData.familyHistory?.length && !formData.otherFamilyHistory?.trim()) {
-      errors.familyHistory = `${sections.family}: Please select at least one family history item or specify other family history`;
+    // Validate suicidal explanation if either thoughts or attempts are 'Yes'
+    if ((formData.suicidalThoughts === 'Yes' || formData.attempts === 'Yes') && formData.suicidalExplanation) {
+      const explanation = formData.suicidalExplanation.trim();
+      if (explanation.length < 10) {
+        errors.suicidalExplanation = `${sections.suicidal}: Please provide more details about your suicidal history`;
+      } else if (explanation.length > 1000) {
+        errors.suicidalExplanation = `${sections.suicidal}: Explanation cannot exceed 1000 characters`;
+      }
+    }
+
+    // Validate allergies
+    if (!formData.allergies?.trim()) {
+      errors.allergies = `${sections.allergies}: Please list any allergies or indicate 'None'`;
+    } else {
+      const allergies = formData.allergies.split(',').map(a => a.trim());
+      
+      // Check for duplicates
+      const uniqueAllergies = new Set(allergies);
+      if (uniqueAllergies.size !== allergies.length) {
+        errors.allergies = `${sections.allergies}: Please remove duplicate allergies`;
+      }
+
+      // Check for maximum number of allergies
+      if (allergies.length > 20) {
+        errors.allergies = `${sections.allergies}: You cannot list more than 20 allergies`;
+      }
+
+      // Validate each allergy format
+      for (const allergy of allergies) {
+        if (allergy.length < 2 || allergy.length > 50) {
+          errors.allergies = `${sections.allergies}: Each allergy must be between 2 and 50 characters`;
+          break;
+        }
+        if (!/^[a-zA-Z0-9\s\-']+$/.test(allergy)) {
+          errors.allergies = `${sections.allergies}: Allergies can only contain letters, numbers, spaces, hyphens, and apostrophes`;
+          break;
+        }
+      }
+    }
+
+    // Validate family history
+    if (!formData.familyHistory?.trim()) {
+      errors.familyHistory = `${sections.family}: Please provide family medical history or indicate 'None'`;
+    } else {
+      const familyHistory = formData.familyHistory.trim();
+      
+      if (familyHistory.length < 10) {
+        errors.familyHistory = `${sections.family}: Please provide more details about your family medical history`;
+      } else if (familyHistory.length > 2000) {
+        errors.familyHistory = `${sections.family}: Family history cannot exceed 2000 characters`;
+      }
+
+      // Validate for common medical terms
+      const medicalTerms = ['diabetes', 'heart disease', 'cancer', 'hypertension', 'stroke'];
+      const hasMedicalTerms = medicalTerms.some(term => 
+        familyHistory.toLowerCase().includes(term)
+      );
+      
+      if (!hasMedicalTerms && familyHistory.toLowerCase() !== 'none') {
+        errors.familyHistory = `${sections.family}: Please include specific medical conditions in your family history`;
+      }
     }
 
     // Validate signature
     if (!formData.signature?.trim()) {
       errors.signature = `${sections.signature}: Please provide your signature to authorize this form`;
+    } else {
+      const signature = formData.signature.trim();
+      if (signature.length < 3 || signature.length > 100) {
+        errors.signature = `${sections.signature}: Signature must be between 3 and 100 characters`;
+      }
+      if (!/^[a-zA-Z\s\-']+$/.test(signature)) {
+        errors.signature = `${sections.signature}: Signature can only contain letters, spaces, hyphens, and apostrophes`;
+      }
     }
 
     return {

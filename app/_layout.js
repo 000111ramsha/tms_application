@@ -22,9 +22,10 @@ export default function RootLayout() {
             headerShown: false,
             contentStyle: { backgroundColor: Colors.background },
             animation: 'fade',
-            animationDuration: 400,
+            animationDuration: 200,
             gestureEnabled: true,
             gestureDirection: 'horizontal',
+            animationTypeForReplace: 'push',
           }}
         />
       </BottomNavProvider>

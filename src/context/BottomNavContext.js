@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { Platform } from 'react-native';
 
 /**
  * Context for managing bottom navigation height across the app
  */
 const BottomNavContext = createContext({
-  bottomNavHeight: 70, // Default fallback
+  bottomNavHeight: Platform.OS === 'ios' ? 85 : 70, // Platform-specific default
   setBottomNavHeight: () => {},
 });
 
@@ -12,7 +13,7 @@ const BottomNavContext = createContext({
  * Provider component for bottom navigation context
  */
 export const BottomNavProvider = ({ children }) => {
-  const [bottomNavHeight, setBottomNavHeight] = useState(70);
+  const [bottomNavHeight, setBottomNavHeight] = useState(Platform.OS === 'ios' ? 85 : 70);
 
   return (
     <BottomNavContext.Provider value={{ bottomNavHeight, setBottomNavHeight }}>
@@ -39,8 +40,8 @@ export const useBottomNavContext = () => {
 export const useScrollViewPadding = () => {
   const { bottomNavHeight } = useBottomNavContext();
 
-  // Reduce padding to half to minimize empty space at bottom
-  const paddingBottom = Math.max((bottomNavHeight - 10, 5)); // Half the previous padding, minimum 10px
+  // No padding at all
+  const paddingBottom = 0;
 
   return { paddingBottom };
 };

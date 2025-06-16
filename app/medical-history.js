@@ -26,7 +26,8 @@ import Fonts from "../src/constants/Fonts";
 import Layout from "../src/constants/Layout";
 import Spacing from "../src/constants/Spacing";
 
-const medicalConditions = [
+// Constants
+const MEDICAL_CONDITIONS = [
   'ASTHMA', 'HEADACHE', 'HEART DISEASE', 'APPETITE PROBLEMS', 'WEIGHT LOSS/GAIN',
   'SLEEP DIFFICULTY', 'ANXIETY', 'STOMACH TROUBLE', 'CONSTIPATION', 'GLAUCOMA',
   'AIDS/HIV', 'HEPATITIS', 'THYROID DISEASE', 'SYPHILIS', 'SEIZURES',
@@ -34,67 +35,25 @@ const medicalConditions = [
   'SUBSTANCE ABUSE', 'FATIGUE', 'LOSS OF CONCENTRATION', 'RECURRENT THOUGHTS', 'SEXUAL PROBLEMS'
 ];
 
-const MedicalHistoryScreen = () => {
-  const router = useRouter();
-  const scrollViewPadding = useScrollViewPadding();
-  const { animatedStyle } = useScreenAnimation();
-  
-  const [formData, setFormData] = useState({
-    medicalConditions: {},
-    suicidalThoughts: '',
-    attempts: '',
-    suicidalExplanation: '',
-    previousPsychiatrist: '',
-    psychiatricHospitalizations: '',
-    legalCharges: '',
-    legalExplanation: '',
-    allergies: '',
-    familyHistory: '',
-    signature: ''
-  });
-  
-  const [isSubmitPressed, setIsSubmitPressed] = useState(false);
-  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+const INITIAL_FORM_DATA = {
+  medicalConditions: {},
+  suicidalThoughts: '',
+  attempts: '',
+  suicidalExplanation: '',
+  previousPsychiatrist: '',
+  psychiatricHospitalizations: '',
+  legalCharges: '',
+  legalExplanation: '',
+  allergies: '',
+  familyHistory: '',
+  signature: ''
+};
+
+// Custom hooks
+const useFormState = () => {
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [validationErrors, setValidationErrors] = useState({});
   const [showErrors, setShowErrors] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  // Create refs for each section
-  const sectionRefs = {
-    medicalConditionsSection: useRef(null),
-    suicidalHistorySection: useRef(null),
-    allergiesSection: useRef(null),
-    familyHistorySection: useRef(null),
-    signatureSection: useRef(null)
-  };
-
-  // Add scrollView ref
-  const scrollViewRef = useRef(null);
-
-  // Helper function to get section ref based on field name
-  const getSectionRef = (fieldName) => {
-    const sectionMap = {
-      // Medical Conditions fields
-      medicalConditions: 'medicalConditionsSection',
-      
-      // Suicidal History fields
-      suicidalThoughts: 'suicidalHistorySection',
-      attempts: 'suicidalHistorySection',
-      suicidalExplanation: 'suicidalHistorySection',
-      
-      // Allergies fields
-      allergies: 'allergiesSection',
-      
-      // Family History fields
-      familyHistory: 'familyHistorySection',
-      
-      // Signature fields
-      signature: 'signatureSection'
-    };
-
-    return sectionRefs[sectionMap[fieldName]];
-  };
 
   const handleConditionChange = (condition, checked) => {
     setFormData(prev => ({
@@ -111,13 +70,121 @@ const MedicalHistoryScreen = () => {
       ...prev,
       [field]: value
     }));
+    // Clear validation error for this field
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
   };
 
+  return {
+    formData,
+    setFormData,
+    validationErrors,
+    setValidationErrors,
+    showErrors,
+    setShowErrors,
+    handleConditionChange,
+    handleInputChange
+  };
+};
+
+const useFormRefs = () => {
+  const sectionRefs = {
+    medicalConditionsSection: useRef(null),
+    suicidalHistorySection: useRef(null),
+    allergiesSection: useRef(null),
+    familyHistorySection: useRef(null),
+    signatureSection: useRef(null)
+  };
+
+  const scrollViewRef = useRef(null);
+
+  const getSectionRef = (fieldName) => {
+    const sectionMap = {
+      medicalConditions: 'medicalConditionsSection',
+      suicidalThoughts: 'suicidalHistorySection',
+      attempts: 'suicidalHistorySection',
+      suicidalExplanation: 'suicidalHistorySection',
+      allergies: 'allergiesSection',
+      familyHistory: 'familyHistorySection',
+      signature: 'signatureSection'
+    };
+
+    return sectionRefs[sectionMap[fieldName]];
+  };
+
+  return {
+    sectionRefs,
+    scrollViewRef,
+    getSectionRef
+  };
+};
+
+const useFormValidation = (formData) => {
+  const validateForm = () => {
+    const errors = {};
+
+    // Validate medical conditions
+    if (!formData.medicalConditions || Object.keys(formData.medicalConditions).length === 0) {
+      errors.medicalConditions = "Please select at least one medical condition or mark 'None'";
+    }
+
+    // Validate suicidal history
+    if (!formData.suicidalThoughts) {
+      errors.suicidalThoughts = "Please indicate if you have had suicidal thoughts";
+    }
+    if (!formData.attempts) {
+      errors.attempts = "Please indicate if you have had any attempts";
+    }
+    if (formData.suicidalThoughts === 'Yes' && !formData.suicidalExplanation) {
+      errors.suicidalExplanation = "Please provide details about your suicidal thoughts";
+    }
+    if (formData.attempts === 'Yes' && !formData.suicidalExplanation) {
+      errors.suicidalExplanation = "Please provide details about your attempts";
+    }
+
+    // Validate allergies
+    if (!formData.allergies) {
+      errors.allergies = "Please list any allergies or indicate 'None'";
+    }
+
+    // Validate family history
+    if (!formData.familyHistory) {
+      errors.familyHistory = "Please provide family medical history or indicate 'None'";
+    }
+
+    // Validate signature
+    if (!formData.signature) {
+      errors.signature = "Please provide your signature to authorize this form";
+    }
+
+    return errors;
+  };
+
+  return { validateForm };
+};
+
+const MedicalHistoryScreen = () => {
+  const router = useRouter();
+  const scrollViewPadding = useScrollViewPadding();
+  const { animatedStyle } = useScreenAnimation();
+  
+  // State management
+  const [isSubmitPressed, setIsSubmitPressed] = useState(false);
+  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Custom hooks
+  const formState = useFormState();
+  const { sectionRefs, scrollViewRef, getSectionRef } = useFormRefs();
+  const { validateForm } = useFormValidation(formState.formData);
+
   const handleDropdownSelect = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    formState.handleInputChange(field, value);
     setOpenDropdownIndex(null);
   };
 
@@ -125,47 +192,13 @@ const MedicalHistoryScreen = () => {
     if (isSubmitting) return;
 
     try {
-      setShowErrors(true);
+      formState.setShowErrors(true);
 
       // Validate form data
-      const errors = {};
-
-      // Validate medical conditions
-      if (!formData.medicalConditions || Object.keys(formData.medicalConditions).length === 0) {
-        errors.medicalConditions = "Please select at least one medical condition or mark 'None'";
-      }
-
-      // Validate suicidal history
-      if (!formData.suicidalThoughts) {
-        errors.suicidalThoughts = "Please indicate if you have had suicidal thoughts";
-      }
-      if (!formData.attempts) {
-        errors.attempts = "Please indicate if you have had any attempts";
-      }
-      if (formData.suicidalThoughts === 'Yes' && !formData.suicidalExplanation) {
-        errors.suicidalExplanation = "Please provide details about your suicidal thoughts";
-      }
-      if (formData.attempts === 'Yes' && !formData.suicidalExplanation) {
-        errors.suicidalExplanation = "Please provide details about your attempts";
-      }
-
-      // Validate allergies
-      if (!formData.allergies) {
-        errors.allergies = "Please list any allergies or indicate 'None'";
-      }
-
-      // Validate family history
-      if (!formData.familyHistory) {
-        errors.familyHistory = "Please provide family medical history or indicate 'None'";
-      }
-
-      // Validate signature
-      if (!formData.signature) {
-        errors.signature = "Please provide your signature to authorize this form";
-      }
+      const errors = validateForm();
 
       if (Object.keys(errors).length > 0) {
-        setValidationErrors(errors);
+        formState.setValidationErrors(errors);
         const firstError = Object.values(errors)[0];
         Alert.alert(
           "Validation Error",
@@ -194,23 +227,26 @@ const MedicalHistoryScreen = () => {
       }
 
       // Clear validation errors and start submission
-      setValidationErrors({});
+      formState.setValidationErrors({});
       setIsSubmitting(true);
 
       // Submit medical history using the service
-      const result = await FormSubmissionService.submitMedicalHistory(formData);
+      const result = await FormSubmissionService.submitMedicalHistory(formState.formData);
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to submit medical history');
+      if (result.success) {
+        setShowSuccessModal(true);
+      } else {
+        Alert.alert(
+          "Error",
+          result.error || "Failed to submit medical history. Please try again.",
+          [{ text: "OK" }]
+        );
       }
-
-      // Show success modal
-      setShowSuccessModal(true);
     } catch (error) {
-      console.error('Error saving medical history:', error);
+      console.error('Error submitting medical history:', error);
       Alert.alert(
         "Error",
-        error.message || "Failed to save medical history. Please try again.",
+        "An unexpected error occurred. Please try again.",
         [{ text: "OK" }]
       );
     } finally {
@@ -229,7 +265,7 @@ const MedicalHistoryScreen = () => {
 
   const renderDropdown = (field, options, placeholder) => {
     const isOpen = openDropdownIndex === field;
-    const selectedValue = formData[field];
+    const selectedValue = formState.formData[field];
     const displayText = selectedValue || placeholder;
     
     return (
@@ -306,17 +342,17 @@ const MedicalHistoryScreen = () => {
               <Text style={styles.instructionText}>Please check if you have a history of:</Text>
               
               <View style={styles.conditionsGrid}>
-                {medicalConditions.map((condition, index) => (
+                {MEDICAL_CONDITIONS.map((condition, index) => (
                   <TouchableOpacity
                     key={condition}
                     style={styles.checkboxRow}
-                    onPress={() => handleConditionChange(condition, !formData.medicalConditions[condition])}
+                    onPress={() => formState.handleConditionChange(condition, !formState.formData.medicalConditions[condition])}
                   >
                     <View style={[
                       styles.checkbox,
-                      formData.medicalConditions[condition] && styles.checkboxChecked
+                      formState.formData.medicalConditions[condition] && styles.checkboxChecked
                     ]}>
-                      {formData.medicalConditions[condition] && (
+                      {formState.formData.medicalConditions[condition] && (
                         <Ionicons name="checkmark" size={16} color={Colors.white} />
                       )}
                     </View>
@@ -347,8 +383,8 @@ const MedicalHistoryScreen = () => {
                 <Text style={styles.label}>Please explain:</Text>
                 <TextInput
                   style={[styles.textInput, styles.textArea]}
-                  value={formData.suicidalExplanation}
-                  onChangeText={(value) => handleInputChange('suicidalExplanation', value)}
+                  value={formState.formData.suicidalExplanation}
+                  onChangeText={(value) => formState.handleInputChange('suicidalExplanation', value)}
                   placeholder="Please provide details if applicable"
                   placeholderTextColor="#666666"
                   multiline={true}
@@ -368,8 +404,8 @@ const MedicalHistoryScreen = () => {
                 <Text style={styles.label}>Previous Psychiatrist(s) or Therapist:</Text>
                 <TextInput
                   style={[styles.textInput, styles.textArea]}
-                  value={formData.previousPsychiatrist}
-                  onChangeText={(value) => handleInputChange('previousPsychiatrist', value)}
+                  value={formState.formData.previousPsychiatrist}
+                  onChangeText={(value) => formState.handleInputChange('previousPsychiatrist', value)}
                   placeholder="List previous mental health providers"
                   placeholderTextColor="#666666"
                   multiline={true}
@@ -381,8 +417,8 @@ const MedicalHistoryScreen = () => {
                 <Text style={styles.label}>Psychiatric hospitalizations (Date, Hospital, Location and Treatment):</Text>
                 <TextInput
                   style={[styles.textInput, styles.textArea]}
-                  value={formData.psychiatricHospitalizations}
-                  onChangeText={(value) => handleInputChange('psychiatricHospitalizations', value)}
+                  value={formState.formData.psychiatricHospitalizations}
+                  onChangeText={(value) => formState.handleInputChange('psychiatricHospitalizations', value)}
                   placeholder="List any psychiatric hospitalizations with details"
                   placeholderTextColor="#666666"
                   multiline={true}
@@ -407,8 +443,8 @@ const MedicalHistoryScreen = () => {
                 <Text style={styles.label}>Please explain:</Text>
                 <TextInput
                   style={[styles.textInput, styles.textArea]}
-                  value={formData.legalExplanation}
-                  onChangeText={(value) => handleInputChange('legalExplanation', value)}
+                  value={formState.formData.legalExplanation}
+                  onChangeText={(value) => formState.handleInputChange('legalExplanation', value)}
                   placeholder="Please provide details if applicable"
                   placeholderTextColor="#666666"
                   multiline={true}
@@ -428,15 +464,15 @@ const MedicalHistoryScreen = () => {
                 <Text style={styles.label}>Allergies *</Text>
                 <TextInput
                   style={[styles.textInput, styles.textArea]}
-                  value={formData.allergies}
-                  onChangeText={(value) => handleInputChange('allergies', value)}
+                  value={formState.formData.allergies}
+                  onChangeText={(value) => formState.handleInputChange('allergies', value)}
                   placeholder="List any allergies or indicate 'None'"
                   placeholderTextColor="#666666"
                   multiline={true}
                   numberOfLines={4}
                 />
-                {validationErrors.allergies && showErrors && (
-                  <Text style={styles.errorText}>{validationErrors.allergies}</Text>
+                {formState.validationErrors.allergies && formState.showErrors && (
+                  <Text style={styles.errorText}>{formState.validationErrors.allergies}</Text>
                 )}
               </View>
             </View>
@@ -452,8 +488,8 @@ const MedicalHistoryScreen = () => {
                 <Text style={styles.label}>Family Medical History: *</Text>
                 <TextInput
                   style={[styles.textInput, styles.textArea]}
-                  value={formData.familyHistory}
-                  onChangeText={(value) => handleInputChange('familyHistory', value)}
+                  value={formState.formData.familyHistory}
+                  onChangeText={(value) => formState.handleInputChange('familyHistory', value)}
                   placeholder="List family medical history"
                   placeholderTextColor="#666666"
                   multiline={true}
@@ -478,15 +514,15 @@ const MedicalHistoryScreen = () => {
                 <TextInput
                   style={[
                     styles.textInput,
-                    validationErrors.signature && showErrors && styles.textInputError
+                    formState.validationErrors.signature && formState.showErrors && styles.textInputError
                   ]}
-                  value={formData.signature}
-                  onChangeText={(value) => handleInputChange('signature', value)}
+                  value={formState.formData.signature}
+                  onChangeText={(value) => formState.handleInputChange('signature', value)}
                   placeholder="Enter your full name to sign this form"
                   placeholderTextColor="#666666"
                 />
-                {validationErrors.signature && showErrors && (
-                  <Text style={styles.errorText}>{validationErrors.signature}</Text>
+                {formState.validationErrors.signature && formState.showErrors && (
+                  <Text style={styles.errorText}>{formState.validationErrors.signature}</Text>
                 )}
               </View>
             </View>

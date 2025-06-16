@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Text, TouchableOpacity, Image } from "react-native";
+import React, { useCallback, useMemo } from "react";
+import { StyleSheet, View, Text, TouchableOpacity, Image, Platform } from "react-native";
 import { useRouter, usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -16,8 +16,8 @@ export default function BottomNavBar({ onLayout }) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
 
-  // Navigation items with their icons and routes
-  const navItems = [
+  // Memoize navigation items to prevent recreation on every render
+  const navItems = useMemo(() => [
     {
       label: "Home",
       icon: require("../../assets/icon-home.png"),
@@ -43,26 +43,47 @@ export default function BottomNavBar({ onLayout }) {
       icon: require("../../assets/icon-contact.png"),
       route: "/contact",
     },
-  ];
+  ], []);
 
-  // Check if a route is active
-  const isActive = (route) => {
+  // Memoized function to check if a route is active
+  const isActive = useCallback((route) => {
     if (route === "/" && pathname === "/") return true;
     if (route !== "/" && pathname.startsWith(route)) return true;
     return false;
-  };
+  }, [pathname]);
+
+  // Optimized navigation handler with immediate feedback
+  const handleNavigation = useCallback((route) => {
+    // Prevent navigation if already on the same route
+    if (isActive(route)) return;
+    
+    // Use replace instead of push for better performance
+    router.replace(route);
+  }, [router, isActive]);
+
+  // Memoize container style to prevent recalculation
+  const containerStyle = useMemo(() => [
+    styles.container,
+    {
+      paddingBottom: Math.max(insets.bottom - 5, 0),
+      height: Platform.OS === 'ios' ? 85 : 70 + Math.max(insets.bottom - 5, 0),
+    }
+  ], [insets.bottom]);
 
   return (
     <View
-      style={[styles.container, { paddingBottom: Math.max(insets.bottom - 5, 0) }]}
+      style={containerStyle}
       onLayout={onLayout}
     >
       {navItems.map((item) => (
         <TouchableOpacity
           key={item.label}
           style={styles.navItem}
-          onPress={() => router.push(item.route)}
-          activeOpacity={0.7}
+          onPress={() => handleNavigation(item.route)}
+          activeOpacity={0.6} // Slightly reduced for faster feedback
+          accessibilityRole="button"
+          accessibilityLabel={item.label}
+          accessibilityState={{ selected: isActive(item.route) }}
         >
           <Image
             source={item.icon}
@@ -73,12 +94,14 @@ export default function BottomNavBar({ onLayout }) {
               },
             ]}
             resizeMode="contain"
+            fadeDuration={0} // Disable fade animation for faster rendering
           />
           <Text
             style={[
               styles.navLabel,
               isActive(item.route) && styles.activeNavLabel,
             ]}
+            numberOfLines={1}
           >
             {item.label}
           </Text>
@@ -97,11 +120,17 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 5,
     justifyContent: "space-between",
-    elevation: 10,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.black,
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+      },
+      android: {
+        elevation: 10,
+      },
+    }),
   },
   navItem: {
     flex: 1,
@@ -121,5 +150,6 @@ const styles = StyleSheet.create({
   },
   activeNavLabel: {
     color: Colors.primary,
+    fontWeight: Fonts.weights.medium,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, SafeAreaView, Image, TextInput, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -96,6 +96,12 @@ const PreCertMedListScreen = () => {
   const scrollViewPadding = useScrollViewPadding();
   const { animatedStyle } = useScreenAnimation();
   
+  // Add refs for scrolling
+  const scrollViewRef = useRef(null);
+  const nameRef = useRef(null);
+  const dateOfBirthRef = useRef(null);
+  const medicationsRef = useRef(null);
+  
   const [formData, setFormData] = useState({
     name: "",
     dateOfBirth: null,
@@ -173,6 +179,51 @@ const PreCertMedListScreen = () => {
       setIsSubmitting(true);
       setShowErrors(true);
 
+      // Validate required fields
+      if (!formData.name?.trim()) {
+        Alert.alert(
+          "Validation Error",
+          "Please enter your name.",
+          [{ 
+            text: "OK",
+            onPress: () => {
+              if (nameRef.current && scrollViewRef.current) {
+                nameRef.current.measureLayout(
+                  scrollViewRef.current,
+                  (x, y) => {
+                    scrollViewRef.current.scrollTo({ y: y - 100, animated: true });
+                  },
+                  () => console.log('Failed to measure layout')
+                );
+              }
+            }
+          }]
+        );
+        return;
+      }
+
+      if (!formData.dateOfBirth) {
+        Alert.alert(
+          "Validation Error",
+          "Please select your date of birth.",
+          [{ 
+            text: "OK",
+            onPress: () => {
+              if (dateOfBirthRef.current && scrollViewRef.current) {
+                dateOfBirthRef.current.measureLayout(
+                  scrollViewRef.current,
+                  (x, y) => {
+                    scrollViewRef.current.scrollTo({ y: y - 100, animated: true });
+                  },
+                  () => console.log('Failed to measure layout')
+                );
+              }
+            }
+          }]
+        );
+        return;
+      }
+
       // Validate that at least one medication is selected
       const hasSelectedMedications = Object.values(formData.selectedMedications).some(
         category => Object.values(category).some(med => med)
@@ -182,14 +233,82 @@ const PreCertMedListScreen = () => {
         Alert.alert(
           "Validation Error",
           "Please select at least one medication.",
-          [{ text: "OK" }]
+          [{ 
+            text: "OK",
+            onPress: () => {
+              if (medicationsRef.current && scrollViewRef.current) {
+                medicationsRef.current.measureLayout(
+                  scrollViewRef.current,
+                  (x, y) => {
+                    scrollViewRef.current.scrollTo({ y: y - 100, animated: true });
+                  },
+                  () => console.log('Failed to measure layout')
+                );
+              }
+            }
+          }]
         );
+        return;
+      }
+
+      // Validate medication details
+      let hasValidationError = false;
+      Object.entries(formData.selectedMedications).forEach(([category, medications]) => {
+        Object.entries(medications).forEach(([medName, isSelected]) => {
+          if (isSelected) {
+            const medicationKey = `${category}_${medName}`;
+            const details = formData.medicationDetails[medicationKey] || {};
+
+            // Validate dose format
+            if (details.dose) {
+              const doseRegex = /^\d+(\.\d+)?\s*(mg|g|ml|mcg|IU|units?)?$/i;
+              if (!doseRegex.test(details.dose.trim())) {
+                Alert.alert(
+                  "Validation Error",
+                  `Please enter a valid dose for ${medName} (e.g., "50 mg", "100mg", "0.5 g")`,
+                  [{ text: "OK" }]
+                );
+                hasValidationError = true;
+                return;
+              }
+            }
+
+            // Validate dates
+            if (details.startDate && details.endDate) {
+              const startDate = new Date(details.startDate);
+              const endDate = new Date(details.endDate);
+              
+              if (endDate < startDate) {
+                Alert.alert(
+                  "Validation Error",
+                  `End date cannot be before start date for ${medName}`,
+                  [{ text: "OK" }]
+                );
+                hasValidationError = true;
+                return;
+              }
+
+              if (startDate > new Date()) {
+                Alert.alert(
+                  "Validation Error",
+                  `Start date cannot be in the future for ${medName}`,
+                  [{ text: "OK" }]
+                );
+                hasValidationError = true;
+                return;
+              }
+            }
+          }
+        });
+      });
+
+      if (hasValidationError) {
         return;
       }
 
       // Format the data for submission
       const submissionData = {
-        name: formData.name,
+        name: formData.name.trim(),
         dateOfBirth: formData.dateOfBirth,
         medications: {}
       };
@@ -204,19 +323,19 @@ const PreCertMedListScreen = () => {
             
             // Clean up medication name to match database column names
             const cleanMedName = medName
-              .replace(/[()]/g, '')  // Remove parentheses
+              .replace(/\([^)]*\)/g, '')  // Remove everything in parentheses
               .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
               .trim();               // Remove leading/trailing spaces
 
             submissionData.medications[category][cleanMedName] = {
               selected: true,
-              dosage: details.dose || null,
+              dosage: details.dose?.trim() || null,
               startDate: details.startDate || null,
               endDate: details.endDate || null,
-              reasonForDiscontinuing: details.reasonForDiscontinuing || null
+              reasonForDiscontinuing: details.reasonForDiscontinuing?.trim() || null
             };
-        }
-      });
+          }
+        });
       });
 
       // Submit the form
@@ -232,7 +351,9 @@ const PreCertMedListScreen = () => {
       console.error('Error saving pre-cert medication list:', error);
       Alert.alert(
         "Error",
-        "Failed to save pre-cert medication list. Please try again.",
+        error.message === 'No active session found' 
+          ? "Your session has expired. Please refresh the page and try again."
+          : "Failed to save pre-cert medication list. Please try again.",
         [{ text: "OK" }]
       );
     } finally {
@@ -252,7 +373,10 @@ const PreCertMedListScreen = () => {
   return (
     <AppBar>
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={scrollViewPadding}>
+        <ScrollView 
+          ref={scrollViewRef}
+          contentContainerStyle={scrollViewPadding}
+        >
           {/* Hero Section */}
           <View style={styles.heroSection}>
             <ExpoImage source={require("../assets/new-patient-hero.jpg")} style={styles.heroImage} />
@@ -263,33 +387,41 @@ const PreCertMedListScreen = () => {
               >
                 <Ionicons name="arrow-back" size={24} color={Colors.white} />
               </TouchableOpacity>
-              <Text style={styles.heroTitle}>TMS PRE-CERTIFICATION{'\n'}MEDICATION LIST</Text>
+              <Text style={styles.heroTitle}>PRE-CERTIFICATION{'\n'}MEDICATION{'\n'}LIST</Text>
             </View>
           </View>
 
           {/* Form Content */}
           <View style={styles.formContainer}>
-            {/* Personal Information */}
-            <View style={styles.personalInfoSection}>
+            {/* Personal Information Section */}
+            <View style={styles.section}>
               <View style={styles.sectionTitleContainer}>
                 <Ionicons name="person" size={20} color={Colors.primary} style={styles.sectionIcon} />
                 <Text style={styles.sectionTitle}>Personal Information</Text>
               </View>
               
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Name</Text>
+                <Text style={styles.label}>Name *</Text>
                 <TextInput
-                  style={styles.textInput}
+                  ref={nameRef}
+                  style={[
+                    styles.textInput,
+                    validationErrors.name && showErrors && styles.textInputError
+                  ]}
                   value={formData.name}
                   onChangeText={(value) => handleInputChange('name', value)}
-                  placeholder="Enter your full name"
+                  placeholder="Enter your name"
                   placeholderTextColor="#666666"
                 />
+                {validationErrors.name && showErrors && (
+                  <Text style={styles.errorText}>{validationErrors.name}</Text>
+                )}
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Date of Birth</Text>
+                <Text style={styles.label}>Date of Birth *</Text>
                 <ModernDatePicker
+                  ref={dateOfBirthRef}
                   value={formData.dateOfBirth}
                   onDateChange={(date) => handleInputChange('dateOfBirth', date)}
                   placeholder="Select Date of Birth"
@@ -297,6 +429,7 @@ const PreCertMedListScreen = () => {
                   textColor="#000000"
                   isDateOfBirth={true}
                   style={styles.datePickerContainer}
+                  error={validationErrors.dateOfBirth && showErrors ? validationErrors.dateOfBirth : null}
                 />
               </View>
             </View>
@@ -471,7 +604,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: Spacing.SECTION_TO_SECTION,
   },
-  personalInfoSection: {
+  section: {
     backgroundColor: '#f8f9fa',
     borderRadius: 0,
     padding: Layout.spacing.large,
@@ -497,7 +630,7 @@ const styles = StyleSheet.create({
   inputGroup: {
     marginBottom: Layout.spacing.medium,
   },
-  inputLabel: {
+  label: {
     fontSize: Fonts.sizes.regular,
     fontWeight: Fonts.weights.bold,
     color: Colors.text,
@@ -511,6 +644,13 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.regular,
     color: '#000000',
     backgroundColor: Colors.white,
+  },
+  textInputError: {
+    borderColor: Colors.error,
+  },
+  errorText: {
+    color: Colors.error,
+    marginTop: 8,
   },
   categorySection: {
     backgroundColor: '#f8f9fa',

@@ -235,8 +235,7 @@ const BDIScreen = () => {
         [questionIndex]: value
       }
     }));
-
-    // Clear validation errors when user makes a selection
+    // Clear validation error for responses
     if (validationErrors.responses) {
       setValidationErrors(prev => ({
         ...prev,

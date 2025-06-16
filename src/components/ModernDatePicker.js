@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -84,6 +84,63 @@ const ModernDatePicker = ({
   const [selectedDay, setSelectedDay] = useState(value ? value.getDate() : new Date().getDate());
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
   const [showYearDropdown, setShowYearDropdown] = useState(false);
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const dropdownAnim = useRef(new Animated.Value(0)).current;
+  const calendarSlideAnim = useRef(new Animated.Value(0)).current;
+
+  // Animate modal open/close
+  useEffect(() => {
+    if (showPicker) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.95,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [showPicker]);
+
+  // Animate dropdown open/close
+  useEffect(() => {
+    Animated.timing(dropdownAnim, {
+      toValue: showMonthDropdown || showYearDropdown ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [showMonthDropdown, showYearDropdown]);
+
+  // Animate calendar slide
+  useEffect(() => {
+    Animated.spring(calendarSlideAnim, {
+      toValue: 1,
+      tension: 50,
+      friction: 7,
+      useNativeDriver: true,
+    }).start();
+  }, [selectedMonth, selectedYear]);
 
   // Sync state with value prop changes
   useEffect(() => {
@@ -271,129 +328,210 @@ const ModernDatePicker = ({
     onBlur();
   }, [onBlur]);
 
-  // Render custom date picker with dropdowns
+  // Render custom date picker with enhanced animations
   const renderCustomDatePicker = () => (
-    <View style={styles.customDatePicker}>
+    <Animated.View 
+      style={[
+        styles.customDatePicker,
+        {
+          opacity: fadeAnim,
+          transform: [
+            { scale: scaleAnim },
+            { translateY: calendarSlideAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [20, 0]
+            })}
+          ]
+        }
+      ]}
+    >
       {/* Header with Month/Year Controls */}
       <View style={styles.calendarHeader}>
         <View style={styles.monthYearContainer}>
           {/* Month Dropdown */}
           <View style={styles.headerDropdownContainer}>
             <TouchableOpacity
-              style={styles.headerDropdown}
+              style={[
+                styles.headerDropdown,
+                showMonthDropdown && styles.headerDropdownActive
+              ]}
               onPress={() => {
                 setShowMonthDropdown(!showMonthDropdown);
                 setShowYearDropdown(false);
               }}
             >
               <Text style={styles.headerDropdownText}>{SHORT_MONTHS[selectedMonth]}</Text>
-              <Ionicons name="chevron-down" size={16} color={Colors.primary} />
+              <Animated.View style={{
+                transform: [{
+                  rotate: dropdownAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '180deg']
+                  })
+                }]
+              }}>
+                <Ionicons name="chevron-down" size={16} color={Colors.primary} />
+              </Animated.View>
             </TouchableOpacity>
             
             {showMonthDropdown && (
-              <ScrollView style={styles.headerDropdownOptions} nestedScrollEnabled>
-                {MONTHS.map((month, index) => (
-                  <TouchableOpacity
-                    key={month}
-                    style={[
-                      styles.headerDropdownOption,
-                      selectedMonth === index && styles.selectedHeaderOption
-                    ]}
-                    onPress={() => handleMonthSelect(index)}
-                  >
-                    <Text style={[
-                      styles.headerDropdownOptionText,
-                      selectedMonth === index && styles.selectedHeaderOptionText
-                    ]}>
-                      {month}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+              <Animated.View style={[
+                styles.headerDropdownOptions,
+                {
+                  opacity: dropdownAnim,
+                  transform: [{
+                    translateY: dropdownAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-10, 0]
+                    })
+                  }]
+                }
+              ]}>
+                <ScrollView nestedScrollEnabled>
+                  {MONTHS.map((month, index) => (
+                    <TouchableOpacity
+                      key={month}
+                      style={[
+                        styles.headerDropdownOption,
+                        selectedMonth === index && styles.selectedHeaderOption
+                      ]}
+                      onPress={() => handleMonthSelect(index)}
+                    >
+                      <Text style={[
+                        styles.headerDropdownOptionText,
+                        selectedMonth === index && styles.selectedHeaderOptionText
+                      ]}>
+                        {month}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </Animated.View>
             )}
           </View>
 
           {/* Year Dropdown */}
           <View style={styles.headerDropdownContainer}>
             <TouchableOpacity
-              style={styles.headerDropdown}
+              style={[
+                styles.headerDropdown,
+                showYearDropdown && styles.headerDropdownActive
+              ]}
               onPress={() => {
                 setShowYearDropdown(!showYearDropdown);
                 setShowMonthDropdown(false);
               }}
             >
               <Text style={styles.headerDropdownText}>{selectedYear}</Text>
-              <Ionicons name="chevron-down" size={16} color={Colors.primary} />
+              <Animated.View style={{
+                transform: [{
+                  rotate: dropdownAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '180deg']
+                  })
+                }]
+              }}>
+                <Ionicons name="chevron-down" size={16} color={Colors.primary} />
+              </Animated.View>
             </TouchableOpacity>
             
             {showYearDropdown && (
-              <ScrollView style={styles.headerDropdownOptions} nestedScrollEnabled>
-                {YEARS.map((year) => (
-                  <TouchableOpacity
-                    key={year}
-                    style={[
-                      styles.headerDropdownOption,
-                      selectedYear === year && styles.selectedHeaderOption
-                    ]}
-                    onPress={() => handleYearSelect(year)}
-                  >
-                    <Text style={[
-                      styles.headerDropdownOptionText,
-                      selectedYear === year && styles.selectedHeaderOptionText
-                    ]}>
-                      {year}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+              <Animated.View style={[
+                styles.headerDropdownOptions,
+                {
+                  opacity: dropdownAnim,
+                  transform: [{
+                    translateY: dropdownAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-10, 0]
+                    })
+                  }]
+                }
+              ]}>
+                <ScrollView nestedScrollEnabled>
+                  {YEARS.map((year) => (
+                    <TouchableOpacity
+                      key={year}
+                      style={[
+                        styles.headerDropdownOption,
+                        selectedYear === year && styles.selectedHeaderOption
+                      ]}
+                      onPress={() => handleYearSelect(year)}
+                    >
+                      <Text style={[
+                        styles.headerDropdownOptionText,
+                        selectedYear === year && styles.selectedHeaderOptionText
+                      ]}>
+                        {year}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </Animated.View>
             )}
           </View>
         </View>
       </View>
 
-      {/* Day Names Header */}
-      <View style={styles.dayNamesHeader}>
-        {DAY_NAMES.map((dayName) => (
-          <View key={dayName} style={styles.dayNameCell}>
-            <Text style={styles.dayNameText}>{dayName}</Text>
-          </View>
-        ))}
-      </View>
-
       {/* Calendar Grid */}
       <View style={styles.calendarGrid}>
-        {/* Empty cells for days before month starts */}
-        {Array.from({ length: getFirstDayOfMonth() }, (_, index) => (
-          <View key={`empty-${index}`} style={styles.emptyDayCell} />
-        ))}
-        
-        {/* Days of the month */}
-        {getDaysArray().map((day) => {
-          const dayIsToday = isToday(day);
-          const isSelected = selectedDay === day;
+        {/* Day Names Header */}
+        <View style={styles.dayNamesHeader}>
+          {DAY_NAMES.map((dayName) => (
+            <View key={dayName} style={styles.dayNameCell}>
+              <Text style={styles.dayNameText}>{dayName}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Days Grid */}
+        <View style={styles.daysGrid}>
+          {Array.from({ length: getFirstDayOfMonth() }, (_, index) => (
+            <View key={`empty-${index}`} style={styles.emptyDayCell} />
+          ))}
           
-          return (
-            <TouchableOpacity
-              key={day}
-              style={[
-                styles.dayCell,
-                isSelected && styles.selectedDayCell,
-                dayIsToday && !isSelected && styles.todayDayCell
-              ]}
-              onPress={() => handleDaySelect(day)}
-            >
-              <Text style={[
-                styles.dayCellText,
-                isSelected && styles.selectedDayCellText,
-                dayIsToday && !isSelected && styles.todayDayCellText
-              ]}>
-                {day}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+          {getDaysArray().map((day) => {
+            const dayIsToday = isToday(day);
+            const isSelected = selectedDay === day;
+            
+            return (
+              <TouchableOpacity
+                key={day}
+                style={[
+                  styles.dayCell,
+                  isSelected && styles.selectedDayCell,
+                  dayIsToday && !isSelected && styles.todayDayCell
+                ]}
+                onPress={() => handleDaySelect(day)}
+              >
+                <Animated.Text style={[
+                  styles.dayCellText,
+                  isSelected && styles.selectedDayCellText,
+                  dayIsToday && !isSelected && styles.todayDayCellText
+                ]}>
+                  {day}
+                </Animated.Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
-    </View>
+
+      {/* Action Buttons */}
+      <View style={styles.actionButtonsContainer}>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={handleIOSModalClose}
+        >
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.doneButton}
+          onPress={useCustomPicker ? confirmCustomDate : handleIOSModalClose}
+        >
+          <Text style={styles.doneButtonText}>Done</Text>
+        </TouchableOpacity>
+      </View>
+    </Animated.View>
   );
 
   // Render iOS Modal with Custom Date Picker
@@ -411,19 +549,7 @@ const ModernDatePicker = ({
         />
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity 
-              onPress={handleIOSModalClose}
-              style={styles.modalCloseButton}
-            >
-              <Text style={styles.modalCloseText}>Cancel</Text>
-            </TouchableOpacity>
             <Text style={styles.modalTitle}>Select Date</Text>
-            <TouchableOpacity 
-              onPress={useCustomPicker ? confirmCustomDate : handleIOSModalClose}
-              style={styles.modalDoneButton}
-            >
-              <Text style={styles.modalDoneText}>Done</Text>
-            </TouchableOpacity>
           </View>
           
           {useCustomPicker ? renderCustomDatePicker() : (
@@ -607,12 +733,11 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
     elevation: 10,
+    overflow: 'hidden',
   },
   modalHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    justifyContent: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.lightGray,
@@ -625,36 +750,12 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weights.bold,
     color: Colors.primary,
   },
-  modalCloseButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: Layout.borderRadius.medium,
-    backgroundColor: '#e0e0e0',
-    borderWidth: 1,
-    borderColor: '#d0d0d0',
-  },
-  modalCloseText: {
-    fontSize: Fonts.sizes.medium,
-    color: Colors.text,
-    fontWeight: Fonts.weights.bold,
-  },
-  modalDoneButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: Layout.borderRadius.medium,
-    backgroundColor: Colors.primary,
-  },
-  modalDoneText: {
-    fontSize: Fonts.sizes.medium,
-    color: Colors.white,
-    fontWeight: Fonts.weights.bold,
-  },
   iosDatePicker: {
     backgroundColor: Colors.white,
     paddingHorizontal: 20,
   },
   customDatePicker: {
-    padding: 20,
+    padding: 16,
     maxHeight: 450,
     backgroundColor: Colors.white,
     borderBottomLeftRadius: 20,
@@ -664,16 +765,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
-    paddingBottom: 15,
+    marginBottom: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.lightGray,
     backgroundColor: '#f8f9fa',
-  },
-  navButton: {
-    padding: 10,
-    borderRadius: Layout.borderRadius.small,
-    backgroundColor: Colors.primary,
   },
   monthYearContainer: {
     flexDirection: 'row',
@@ -756,16 +852,15 @@ const styles = StyleSheet.create({
   dayNamesHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
-    paddingBottom: 10,
+    marginBottom: 8,
+    paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: Colors.lightGray,
   },
   dayNameCell: {
-    width: '14.28%', // 7 days = 100% / 7
-    justifyContent: 'center',
+    width: '14.28%',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
   dayNameText: {
     fontSize: Fonts.sizes.small,
@@ -775,17 +870,21 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   calendarGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    width: '100%',
+    marginBottom: 0,
   },
   dayCell: {
-    width: '14.28%', // 7 days = 100% / 7
+    width: '14.28%',
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 2,
     borderRadius: Layout.borderRadius.small,
     backgroundColor: 'transparent',
+  },
+  emptyDayCell: {
+    width: '14.28%',
+    aspectRatio: 1,
   },
   selectedDayCell: {
     backgroundColor: Colors.primary,
@@ -794,6 +893,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
+    transform: [{ scale: 1.1 }],
+  },
+  todayDayCell: {
+    backgroundColor: 'rgba(44, 82, 100, 0.1)',
+    borderWidth: 1,
+    borderColor: Colors.primary,
   },
   dayCellText: {
     fontSize: Fonts.sizes.medium,
@@ -804,18 +909,69 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontWeight: Fonts.weights.bold,
   },
-  todayDayCell: {
-    backgroundColor: 'rgba(44, 82, 100, 0.1)',
-    borderWidth: 1,
-    borderColor: Colors.primary,
-  },
   todayDayCellText: {
     color: Colors.primary,
     fontWeight: Fonts.weights.bold,
   },
-  emptyDayCell: {
-    width: '14.28%', // 7 days = 100% / 7
-    aspectRatio: 1,
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderTopWidth: 1,
+    borderTopColor: Colors.lightGray,
+    backgroundColor: '#f8f9fa',
+    marginTop: 0,
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: Layout.borderRadius.medium,
+    backgroundColor: '#e0e0e0',
+    borderWidth: 1,
+    borderColor: '#d0d0d0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+  },
+  cancelButtonText: {
+    fontSize: Fonts.sizes.medium,
+    color: Colors.text,
+    fontWeight: Fonts.weights.bold,
+  },
+  doneButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: Layout.borderRadius.medium,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
+  },
+  doneButtonText: {
+    fontSize: Fonts.sizes.medium,
+    color: Colors.white,
+    fontWeight: Fonts.weights.bold,
+  },
+  // Enhanced styles for better animations and visual feedback
+  headerDropdownActive: {
+    backgroundColor: 'rgba(44, 82, 100, 0.1)',
+    borderColor: Colors.primary,
+    borderWidth: 2,
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingTop: 2,
+    paddingBottom: 0,
+  },
+  todayDayCell: {
+    backgroundColor: 'rgba(44, 82, 100, 0.1)',
+    borderWidth: 1,
+    borderColor: Colors.primary,
   },
 });
 

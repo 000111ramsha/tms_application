@@ -265,7 +265,7 @@ class FormSubmissionService {
             // Convert medication name to snake case for database column
             const baseColumnName = medName
               .toLowerCase()
-              .replace(/[()]/g, '')  // Remove parentheses
+              .replace(/\([^)]*\)/g, '')  // Remove everything in parentheses
               .replace(/\s+/g, '_')  // Replace spaces with underscores
               .replace(/[^a-z0-9_]/g, '')  // Remove any other special characters
               .trim();
@@ -288,16 +288,16 @@ class FormSubmissionService {
       // Insert the form submission
       const { data, error } = await supabase
           .from('pre_cert_med_list_form')
-        .insert([formSubmission])
-        .select()
-        .single();
+          .insert([formSubmission])
+          .select()
+          .single();
 
       if (error) {
         console.error('Error in submitPreCertMedList:', error);
         throw new Error(error.message);
       }
 
-      // Generate and send PDF with submission data (which has the medications structure)
+      // Generate and send PDF with submission data
       await PDFEmailService.generateAndSendPDF('Pre-Certification Medication List', {
         name: formData.name,
         dateOfBirth: formData.dateOfBirth,

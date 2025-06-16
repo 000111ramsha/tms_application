@@ -43,26 +43,20 @@ import Spacing from "../src/constants/Spacing";
 // Import utils
 import { validateEmail } from "../src/utils/validation";
 
-// Location coordinates
+// Constants
 const OFFICE_LOCATION = {
   longitude: -86.6218,
   latitude: 30.4205,
   address: "403 Hollywood Blvd NW Suite 104A Fort Walton Beach, FL 32548",
   zoom: 15,
-  markerColor: "f74e4e" // Hex color for the map marker (red, without #)
+  markerColor: "f74e4e"
 };
 
-/**
- * Contact Screen Component
- */
-export default function ContactScreen() {
-  const router = useRouter();
-  const scrollViewPadding = useScrollViewPadding();
-  
-  // Use fade animation hook for calming, therapeutic effect
-  const { animatedStyle } = useFadeAnimation(400);
-  
-  // Use form reducer for better state management
+const PHONE_NUMBER = "850-254-9575";
+const EMAIL_ADDRESS = "info@tmsofemeraldcoast.com";
+
+// Custom hooks
+const useContactForm = () => {
   const {
     fields,
     errors,
@@ -74,15 +68,13 @@ export default function ContactScreen() {
     resetForm,
     setPressedState,
   } = useFormReducer(
-    // Initial fields
     {
       name: "",
       email: "",
       message: "",
-      date: null, // Changed to null for date object
+      date: null,
       consultationType: "Consultation",
     },
-    // Initial errors
     {
       name: "",
       email: "",
@@ -90,7 +82,6 @@ export default function ContactScreen() {
       date: "",
       consultationType: "",
     },
-    // Initial pressed states
     {
       mapStyle: false,
       mapDirections: false,
@@ -98,16 +89,25 @@ export default function ContactScreen() {
     }
   );
 
-  // Separate state for UI elements that don't belong in the form
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showConsultationOptions, setShowConsultationOptions] = useState(false);
-
-  const handleCall = () => {
-    Linking.openURL("tel:850-254-9575");
+  return {
+    fields,
+    errors,
+    pressedStates,
+    setField,
+    setError,
+    clearError,
+    clearAllErrors,
+    resetForm,
+    setPressedState,
   };
+};
 
-  // Function to open location in maps app
-  const openInMaps = () => {
+const useContactActions = () => {
+  const handleCall = useCallback(() => {
+    Linking.openURL(`tel:${PHONE_NUMBER}`);
+  }, []);
+
+  const openInMaps = useCallback(() => {
     const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' });
     const latLng = `${OFFICE_LOCATION.latitude},${OFFICE_LOCATION.longitude}`;
     const label = encodeURIComponent(OFFICE_LOCATION.address);
@@ -117,15 +117,22 @@ export default function ContactScreen() {
     });
 
     Linking.openURL(url);
+  }, []);
+
+  const handleEmail = useCallback(() => {
+    Linking.openURL(`mailto:${EMAIL_ADDRESS}`);
+  }, []);
+
+  return {
+    handleCall,
+    openInMaps,
+    handleEmail,
   };
+};
 
+const useFormValidation = (formState) => {
+  const { fields, setError, clearError } = formState;
 
-
-  const handleEmail = () => {
-    Linking.openURL("mailto:info@tmsofemeraldcoast.com");
-  };
-
-  // Individual field validation functions
   const validateNameField = useCallback((value) => {
     if (!value.trim()) {
       setError("name", "Please enter your name");
@@ -152,11 +159,8 @@ export default function ContactScreen() {
     }
   }, [setError, clearError]);
 
-
-
   const validateDateField = useCallback((value) => {
     if (value) {
-      // Validate that the selected date is not today or in the past
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
@@ -195,7 +199,6 @@ export default function ContactScreen() {
     }
   }, [setError, clearError]);
 
-  // Comprehensive form validation
   const validateForm = useCallback(() => {
     const isNameValid = validateNameField(fields.name);
     const isEmailValid = validateEmailField(fields.email);
@@ -206,10 +209,37 @@ export default function ContactScreen() {
     return isNameValid && isEmailValid && isDateValid && isMessageValid && isConsultationValid;
   }, [fields, validateNameField, validateEmailField, validateDateField, validateMessageField, validateConsultationField]);
 
+  return {
+    validateNameField,
+    validateEmailField,
+    validateDateField,
+    validateMessageField,
+    validateConsultationField,
+    validateForm,
+  };
+};
+
+/**
+ * Contact Screen Component
+ */
+export default function ContactScreen() {
+  const router = useRouter();
+  const scrollViewPadding = useScrollViewPadding();
+  const { animatedStyle } = useFadeAnimation(400);
+  
+  // State management
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConsultationOptions, setShowConsultationOptions] = useState(false);
+
+  // Custom hooks
+  const formState = useContactForm();
+  const { handleCall, openInMaps, handleEmail } = useContactActions();
+  const formValidation = useFormValidation(formState);
+
   const handleSubmit = useCallback(async () => {
     if (isSubmitting) return;
 
-    if (!validateForm()) {
+    if (!formValidation.validateForm()) {
       return;
     }
 
@@ -222,8 +252,8 @@ export default function ContactScreen() {
       const senderEmail = "onboarding@resend.dev"; // For production, use your verified domain
       const resendApiKey = "re_a6sV9E4m_7z2rZVBbLQpkxbuqdLCam3DR"; // IMPORTANT: Replace with your actual Resend API key
 
-      const preferredDateFormatted = fields.date 
-        ? new Date(fields.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+      const preferredDateFormatted = formState.fields.date 
+        ? new Date(formState.fields.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
         : 'Not specified';
       
       const submissionTime = new Date().toLocaleString('en-US', { 
@@ -269,11 +299,11 @@ export default function ContactScreen() {
     <div class="content">
       <div class="field-block">
         <label>Patient Name:</label>
-        <div class="value">${fields.name}</div>
+        <div class="value">${formState.fields.name}</div>
       </div>
       <div class="field-block">
         <label>Email Address:</label>
-        <div class="value"><a href="mailto:${fields.email.trim()}">${fields.email.trim()}</a></div>
+        <div class="value"><a href="mailto:${formState.fields.email.trim()}">${formState.fields.email.trim()}</a></div>
       </div>
       <div class="field-block">
         <label>Preferred Date:</label>
@@ -281,11 +311,11 @@ export default function ContactScreen() {
       </div>
       <div class="field-block">
         <label>Consultation Type:</label>
-        <div class="value">${fields.consultationType}</div>
+        <div class="value">${formState.fields.consultationType}</div>
       </div>
       <div class="field-block">
         <label>Message:</label>
-        <div class="value">${fields.message}</div>
+        <div class="value">${formState.fields.message}</div>
       </div>
       <div class="field-block">
         <label>Submission Time:</label>
@@ -295,14 +325,6 @@ export default function ContactScreen() {
         <label>Source:</label>
         <div class="value">Contact Page Form</div>
       </div>
-    </div>
-    <div class="next-steps">
-      <h3>Next Steps:</h3>
-      <ul>
-        <li>Contact the patient within 24 hours</li>
-        <li>Schedule their preferred consultation type</li>
-        <li>Send intake forms if needed</li>
-      </ul>
     </div>
   </div>
   <div class="footer">
@@ -315,9 +337,9 @@ export default function ContactScreen() {
       const emailData = {
         from: `"${senderName}" <${senderEmail}>`,
         to: [adminEmail],
-        subject: `New Message Submission from ${fields.name}`,
+        subject: `New Message Submission from ${formState.fields.name}`,
         html: htmlBody,
-        reply_to: fields.email.trim(),
+        reply_to: formState.fields.email.trim(),
       };
 
       const response = await fetch("https://api.resend.com/emails", {
@@ -342,7 +364,7 @@ export default function ContactScreen() {
         {
           text: "OK",
           onPress: () => {
-            resetForm();
+            formState.resetForm();
             // Optionally, navigate away or clear other states
           },
         },
@@ -352,7 +374,7 @@ export default function ContactScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [isSubmitting, validateForm, fields, resetForm]);
+  }, [isSubmitting, formValidation.validateForm, formState, setIsSubmitting]);
 
   return (
     <AppBar>
@@ -416,7 +438,7 @@ export default function ContactScreen() {
           <Pressable
             style={styles.formContainer}
             onPress={() => {
-              clearAllErrors();
+              formState.clearAllErrors();
               Keyboard.dismiss();
             }}
           >
@@ -426,27 +448,27 @@ export default function ContactScreen() {
             {/* Name Field */}
             <View style={styles.fieldContainer}>
               <TextInput
-                style={[styles.input, errors.name ? styles.inputError : null]}
+                style={[styles.input, formState.errors.name ? styles.inputError : null]}
                 placeholder="Your Name"
-                value={fields.name}
+                value={formState.fields.name}
                 onChangeText={(value) => {
-                  setField("name", value);
-                  if (errors.name) validateNameField(value);
+                  formState.setField("name", value);
+                  if (formState.errors.name) formValidation.validateNameField(value);
                 }}
-                onBlur={() => validateNameField(fields.name)}
+                onBlur={() => formValidation.validateNameField(formState.fields.name)}
                 placeholderTextColor="#666"
               />
-              {errors.name ? (
+              {formState.errors.name ? (
                 <View style={styles.errorContainer}>
                   <Ionicons name="alert-circle" size={16} color={Colors.error} style={styles.errorIcon} />
-                  <Text style={styles.errorText}>{errors.name}</Text>
+                  <Text style={styles.errorText}>{formState.errors.name}</Text>
                 </View>
               ) : null}
             </View>
 
             {/* Date Field */}
             <ModernDatePicker
-              value={fields.date}
+              value={formState.fields.date}
               onDateChange={(date) => {
                 // Validate date for contact form only
                 const today = new Date();
@@ -456,17 +478,17 @@ export default function ContactScreen() {
                 selectedDate.setHours(0, 0, 0, 0);
                 
                 if (selectedDate <= today) {
-                  setError("date", "Please select a future date");
+                  formState.setError("date", "Please select a future date");
                   return;
                 }
                 
-                setField("date", date);
-                if (errors.date) validateDateField(date);
+                formState.setField("date", date);
+                if (formState.errors.date) formValidation.validateDateField(date);
               }}
               placeholder="Select Preferred Date"
-              error={errors.date}
-              onFocus={() => clearError("date")}
-              onBlur={() => validateDateField(fields.date)}
+              error={formState.errors.date}
+              onFocus={() => formState.clearError("date")}
+              onBlur={() => formValidation.validateDateField(formState.fields.date)}
               style={styles.datePickerContainer}
               placeholderTextColor="#666"
               textColor="#222"
@@ -477,36 +499,34 @@ export default function ContactScreen() {
             {/* Email Field */}
             <View style={styles.fieldContainer}>
               <TextInput
-                style={[styles.input, errors.email ? styles.inputError : null]}
+                style={[styles.input, formState.errors.email ? styles.inputError : null]}
                 placeholder="Your Email"
-                value={fields.email}
+                value={formState.fields.email}
                 onChangeText={(value) => {
-                  setField("email", value);
-                  if (errors.email) validateEmailField(value);
+                  formState.setField("email", value);
+                  if (formState.errors.email) formValidation.validateEmailField(value);
                 }}
-                onBlur={() => validateEmailField(fields.email)}
+                onBlur={() => formValidation.validateEmailField(formState.fields.email)}
                 keyboardType="email-address"
                 placeholderTextColor="#666"
                 autoCapitalize="none"
               />
-              {errors.email ? (
+              {formState.errors.email ? (
                 <View style={styles.errorContainer}>
                   <Ionicons name="alert-circle" size={16} color={Colors.error} style={styles.errorIcon} />
-                  <Text style={styles.errorText}>{errors.email}</Text>
+                  <Text style={styles.errorText}>{formState.errors.email}</Text>
                 </View>
               ) : null}
             </View>
 
-
-
             {/* Consultation Type Field */}
             <View style={styles.fieldContainer}>
               <TouchableOpacity
-                style={[styles.dropdown, errors.consultationType ? styles.inputError : null]}
+                style={[styles.dropdown, formState.errors.consultationType ? styles.inputError : null]}
                 onPress={() => setShowConsultationOptions(!showConsultationOptions)}
-                onPressIn={() => clearError("consultationType")}
+                onPressIn={() => formState.clearError("consultationType")}
               >
-                <Text style={styles.dropdownText}>{fields.consultationType}</Text>
+                <Text style={styles.dropdownText}>{formState.fields.consultationType}</Text>
                 <Ionicons name={showConsultationOptions ? "chevron-up" : "chevron-down"} size={20} color="#666" style={{ marginLeft: 8 }} />
               </TouchableOpacity>
               {showConsultationOptions && (
@@ -516,9 +536,9 @@ export default function ContactScreen() {
                       key={option}
                       style={styles.dropdownOption}
                       onPress={() => {
-                        setField("consultationType", option);
+                        formState.setField("consultationType", option);
                         setShowConsultationOptions(false);
-                        if (errors.consultationType) validateConsultationField(option);
+                        if (formState.errors.consultationType) formValidation.validateConsultationField(option);
                       }}
                     >
                       <Text style={styles.dropdownOptionText}>{option}</Text>
@@ -526,10 +546,10 @@ export default function ContactScreen() {
                   ))}
                 </View>
               )}
-              {errors.consultationType ? (
+              {formState.errors.consultationType ? (
                 <View style={styles.errorContainer}>
                   <Ionicons name="alert-circle" size={16} color={Colors.error} style={styles.errorIcon} />
-                  <Text style={styles.errorText}>{errors.consultationType}</Text>
+                  <Text style={styles.errorText}>{formState.errors.consultationType}</Text>
                 </View>
               ) : null}
             </View>
@@ -537,31 +557,31 @@ export default function ContactScreen() {
             {/* Message Field */}
             <View style={styles.fieldContainer}>
               <TextInput
-                style={[styles.input, styles.textArea, errors.message ? styles.inputError : null]}
+                style={[styles.input, styles.textArea, formState.errors.message ? styles.inputError : null]}
                 placeholder="Your Message"
-                value={fields.message}
+                value={formState.fields.message}
                 onChangeText={(value) => {
-                  setField("message", value);
-                  if (errors.message) validateMessageField(value);
+                  formState.setField("message", value);
+                  if (formState.errors.message) formValidation.validateMessageField(value);
                 }}
-                onBlur={() => validateMessageField(fields.message)}
+                onBlur={() => formValidation.validateMessageField(formState.fields.message)}
                 multiline
                 numberOfLines={5}
                 placeholderTextColor="#666"
               />
-              {errors.message ? (
+              {formState.errors.message ? (
                 <View style={styles.errorContainer}>
                   <Ionicons name="alert-circle" size={16} color={Colors.error} style={styles.errorIcon} />
-                  <Text style={styles.errorText}>{errors.message}</Text>
+                  <Text style={styles.errorText}>{formState.errors.message}</Text>
                 </View>
               ) : null}
             </View>
 
             <SubmitButton
               onPress={handleSubmit}
-              onPressIn={() => !isSubmitting && setPressedState("sendMessage", true)}
-              onPressOut={() => setPressedState("sendMessage", false)}
-              isPressed={pressedStates.sendMessage}
+              onPressIn={() => !isSubmitting && formState.setPressedState("sendMessage", true)}
+              onPressOut={() => formState.setPressedState("sendMessage", false)}
+              isPressed={formState.pressedStates.sendMessage}
               isSubmitting={isSubmitting}
               disabled={isSubmitting}
               title="SEND MESSAGE"
@@ -580,7 +600,6 @@ export default function ContactScreen() {
                 showDirectionsButton={true}
               />
             </View>
-
 
           </View>
         </ScrollView>
