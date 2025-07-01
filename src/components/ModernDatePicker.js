@@ -84,6 +84,9 @@ const ModernDatePicker = ({
   const [selectedDay, setSelectedDay] = useState(value ? value.getDate() : new Date().getDate());
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
   const [showYearDropdown, setShowYearDropdown] = useState(false);
+  
+  // State for native iOS picker
+  const [tempNativeDate, setTempNativeDate] = useState(value || new Date());
 
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -148,11 +151,13 @@ const ModernDatePicker = ({
       setSelectedMonth(value.getMonth());
       setSelectedYear(value.getFullYear());
       setSelectedDay(value.getDate());
+      setTempNativeDate(value);
     } else {
       const today = new Date();
       setSelectedMonth(today.getMonth());
       setSelectedYear(today.getFullYear());
       setSelectedDay(today.getDate());
+      setTempNativeDate(today);
     }
   }, [value]);
 
@@ -186,8 +191,14 @@ const ModernDatePicker = ({
     }
     
     if (event.type === 'set' && selectedDate) {
-      onDateChange(selectedDate);
-      onBlur();
+      if (Platform.OS === 'android') {
+        // Android handles confirmation automatically
+        onDateChange(selectedDate);
+        onBlur();
+      } else {
+        // iOS: just update temp state, user needs to tap Done
+        setTempNativeDate(selectedDate);
+      }
     }
     
     if (Platform.OS === 'ios' && event.type === 'dismissed') {
@@ -307,6 +318,19 @@ const ModernDatePicker = ({
     handleIOSModalClose();
   }, [selectedYear, selectedMonth, selectedDay, onDateChange]);
 
+  // Confirm native date selection
+  const confirmNativeDate = useCallback(() => {
+    onDateChange(tempNativeDate);
+    handleIOSModalClose();
+  }, [tempNativeDate, onDateChange]);
+
+  // Cancel native date selection
+  const cancelNativeDate = useCallback(() => {
+    // Reset temp date to current value or default
+    setTempNativeDate(value || new Date());
+    handleIOSModalClose();
+  }, [value]);
+
   // Handle picker open
   const handlePress = useCallback(() => {
     if (disabled) return;
@@ -314,11 +338,14 @@ const ModernDatePicker = ({
     setIsPressed(true);
     onFocus();
     
+    // Initialize temp date for native picker
+    setTempNativeDate(value || new Date());
+    
     setShowPicker(true);
     
     // Reset pressed state after a brief moment
     setTimeout(() => setIsPressed(false), 150);
-  }, [disabled, onFocus]);
+  }, [disabled, onFocus, value]);
 
   // Handle iOS modal close
   const handleIOSModalClose = useCallback(() => {
@@ -553,17 +580,35 @@ const ModernDatePicker = ({
           </View>
           
           {useCustomPicker ? renderCustomDatePicker() : (
-            <DateTimePicker
-              value={getDefaultPickerValue()}
-              mode="date"
-              display="spinner"
-              onChange={handleDateChange}
-              minimumDate={getMinimumDate()}
-              maximumDate={getMaximumDate()}
-              style={styles.iosDatePicker}
-              accentColor={Colors.primary}
-              themeVariant="light"
-            />
+            <View style={styles.nativePickerContainer}>
+              <DateTimePicker
+                value={tempNativeDate}
+                mode="date"
+                display="spinner"
+                onChange={handleDateChange}
+                minimumDate={getMinimumDate()}
+                maximumDate={getMaximumDate()}
+                style={styles.iosDatePicker}
+                accentColor={Colors.primary}
+                themeVariant="light"
+              />
+              
+              {/* Action Buttons for Native Picker */}
+              <View style={styles.actionButtonsContainer}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={cancelNativeDate}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.doneButton}
+                  onPress={confirmNativeDate}
+                >
+                  <Text style={styles.doneButtonText}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
         </View>
       </View>
@@ -753,6 +798,11 @@ const styles = StyleSheet.create({
   iosDatePicker: {
     backgroundColor: Colors.white,
     paddingHorizontal: 20,
+  },
+  nativePickerContainer: {
+    backgroundColor: Colors.white,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   customDatePicker: {
     padding: 16,
